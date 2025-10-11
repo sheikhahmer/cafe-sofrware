@@ -16,7 +16,16 @@ class OrdersTable
         return $table
             ->columns([
                 TextColumn::make('customer_name')->label('Customer')->searchable(),
-                TextColumn::make('order_type')->label('Type')->badge(),
+                TextColumn::make('order_type')
+                    ->label('Type')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'dine_in' => 'Dine In',
+                        'take_away' => 'Take Away',
+                        'delivery' => 'Delivery',
+                        default => ucfirst(str_replace('_', ' ', $state)),
+                    }),
+
                 TextColumn::make('bill_no')->label('Bill No'),
                 TextColumn::make('grand_total')->label('Total')->numeric(),
                 TextColumn::make('status')
@@ -67,15 +76,11 @@ class OrdersTable
                     ->icon('heroicon-o-currency-dollar')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->action(function ($record) {
-                        // When clicked, mark as paid
+                    ->action(function ($record, $livewire) {
                         $record->update(['status' => 'paid']);
-                    })
-                    ->after(function ($record, $livewire) {
-                        // Open print page and refresh Filament table
-                        $url = route('orders.print.paid', $record);
-                        $livewire->redirect($url, navigate: false);
                         $livewire->dispatch('$refresh');
+                        $url = route('orders.print.paid', $record);
+                        $livewire->js("window.open('{$url}', '_blank');");
                     })
                     ->disabled(fn ($record) => $record->status === 'paid'),
             ])

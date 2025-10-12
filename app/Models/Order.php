@@ -14,8 +14,6 @@ class Order extends Model
         'contact',
         'address',
         'order_type',
-        'bill_date',
-        'bill_no',
         'table_id',
         'waiter_id',
         'service_charges',

@@ -12,7 +12,7 @@
 </head>
 <body onload="window.print()">
 <h2>KITCHEN ORDER</h2>
-<p><strong>Order #:</strong> {{ $order->bill_no }}</p>
+<p><strong>Order #:</strong> {{ $order->id }}</p>
 <p><strong>Type:</strong> {{ ucfirst($order->order_type) }}</p>
 <p><strong>Customer:</strong> {{ $order->customer_name ?? 'Walk-in' }}</p>
 

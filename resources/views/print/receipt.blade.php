@@ -13,8 +13,8 @@
 </head>
 <body onload="window.print()">
 <h2>Masoom's Cafe</h2>
-<p><strong>Order #:</strong> {{ $order->bill_no }}</p>
-<p><strong>Date:</strong> {{ $order->bill_date }}</p>
+<p><strong>Order #:</strong> {{ $order->id }}</p>
+<p><strong>Date:</strong> {{ $order->created_at }}</p>
 <p><strong>Customer:</strong> {{ $order->customer_name ?? 'Walk-in' }}</p>
 <p><strong>Order Type:</strong> {{ ucfirst($order->order_type) }}</p>
 

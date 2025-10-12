@@ -12,6 +12,7 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'category_id',
         'quantity',
         'price',
         'total',
@@ -27,4 +28,24 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($item) {
+            if ($item->product_id) {
+                $item->category_id = \App\Models\Product::where('id', $item->product_id)->value('category_id');
+            }
+        });
+
+        static::updating(function ($item) {
+            if ($item->isDirty('product_id')) {
+                $item->category_id = \App\Models\Product::where('id', $item->product_id)->value('category_id');
+            }
+        });
+    }
+
 }

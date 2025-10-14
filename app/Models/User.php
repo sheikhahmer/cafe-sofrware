@@ -45,4 +45,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        // Only allow users with admin role to access Filament panel
+        return $this->hasRole('admin');
+    }
 }

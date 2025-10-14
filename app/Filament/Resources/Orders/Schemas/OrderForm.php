@@ -45,9 +45,6 @@ class OrderForm
                     }
                 }),
 
-            DatePicker::make('bill_date')->required(),
-            TextInput::make('bill_no')->required(),
-
             Select::make('table_id')
                 ->relationship('table', 'no')
                 ->label('Table')
@@ -85,7 +82,7 @@ class OrderForm
                     TextInput::make('total')
                         ->numeric()
                         ->disabled()
-                        ->dehydrated() // ✅ ensures it gets saved
+                        ->dehydrated()
 
                 ])
                 ->columns(4) // keep internal fields arranged in 4 columns for nice layout
@@ -138,19 +135,24 @@ class OrderForm
         $delivery = $get('delivery_charges') ?? 0;
         $orderType = $get('order_type');
 
-        // 🧾 Calculate subtotal
-        $discountAmount = ($itemsTotal * $discountPercent) / 100;
-        $subtotal = $itemsTotal - $discountAmount - $manualDiscount;
+        // 🧾 Step 1: Base subtotal (no discounts yet)
+        $subtotalBeforeDiscounts = $itemsTotal;
 
-        // 👇 Auto add 7% service charge for dine-in
+        // ✅ Step 2: Service charge — based on full subtotal, before any discounts
         $serviceCharge = 0;
         if ($orderType === 'dine_in') {
-            $serviceCharge = round($subtotal * 0.07, 2);
+            $serviceCharge = round($subtotalBeforeDiscounts * 0.07, 2);
         }
         $set('service_charges', $serviceCharge);
 
-        // 👇 Calculate final grand total
-        $grandTotal = $subtotal + $serviceCharge + ($orderType === 'delivery' ? $delivery : 0);
+        // 🧮 Step 3: Apply both discounts AFTER service charge is determined
+        $discountAmount = ($itemsTotal * $discountPercent) / 100;
+        $subtotalAfterDiscounts = $subtotalBeforeDiscounts - $discountAmount - $manualDiscount;
+
+        // ✅ Step 4: Calculate final grand total
+        $grandTotal = $subtotalAfterDiscounts + $serviceCharge + ($orderType === 'delivery' ? $delivery : 0);
+
         $set('grand_total', $grandTotal);
     }
+
 }

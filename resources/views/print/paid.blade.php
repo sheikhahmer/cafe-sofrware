@@ -17,7 +17,7 @@
 <h3>PAID RECEIPT</h3>
 <div class="paid">PAID ✔</div>
 
-<p><strong>Order #:</strong> {{ $order->bill_no }}</p>
+<p><strong>Order #:</strong> {{ $order->id }}</p>
 <p><strong>Date:</strong> {{ $order->bill_date }}</p>
 <p><strong>Customer:</strong> {{ $order->customer_name ?? 'Walk-in' }}</p>
 

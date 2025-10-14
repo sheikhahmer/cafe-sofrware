@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id');
             $table->foreignId('product_id');
+            $table->foreignId('category_id');
             $table->integer('quantity');
             $table->decimal('price', 10, 2);
             $table->decimal('total', 12, 2);
+            $table->boolean('kitchen_printed')->default(false);
             $table->timestamps();
         });
     }

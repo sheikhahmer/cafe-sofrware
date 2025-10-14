@@ -131,7 +131,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/shiki-php" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/invade" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/laravel-package-tools" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/laravel-permission" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/ryangjchandler/blade-capture-directive" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/theseer/tokenizer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/simple-cache" />
@@ -143,8 +142,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/graham-campbell/result-type" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/event-dispatcher" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/log" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/bezhansalleh/filament-plugin-essentials" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/bezhansalleh/filament-shield" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/kirschbaum-development/eloquent-power-joins" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/ramsey/collection" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/ramsey/uuid" />

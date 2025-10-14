@@ -11,3 +11,4 @@ Route::get('/', function () {
 Route::get('/orders/{order}/print/kitchen', [OrderPrintController::class, 'kitchen'])->name('orders.print.kitchen');
 Route::get('/orders/{order}/print/receipt', [OrderPrintController::class, 'receipt'])->name('orders.print.receipt');
 Route::get('/orders/{order}/print/paid', [OrderPrintController::class, 'paid'])->name('orders.print.paid');
+

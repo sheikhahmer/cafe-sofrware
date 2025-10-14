@@ -2,64 +2,116 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\OrderItem;
-use App\Models\Category;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
-    /**
-     * Generate/download a category-product grouped report.
-     * Accepts optional `filter` query param: today | week | month | all
-     */
-    public function categorySalesReport(Request $request, $mode = 'download')
+    public function downloadPdf(Request $request)
     {
-        $filter = $request->query('filter', 'today');
-
-        $dateQuery = function ($query) use ($filter) {
-            if ($filter === 'today') {
-                $query->whereDate('bill_date', today());
-            } elseif ($filter === 'week') {
-                $query->whereBetween('bill_date', [now()->startOfWeek(), now()->endOfWeek()]);
-            } elseif ($filter === 'month') {
-                $query->whereMonth('bill_date', now()->month)->whereYear('bill_date', now()->year);
-            } // 'all' -> no date filter
-        };
-
-        // join with orders via whereHas to apply date filter on order bills
-        $itemsQuery = OrderItem::query()
-            ->selectRaw('category_id, product_id, SUM(quantity) as total_quantity, SUM(total) as total_sales')
-            ->whereHas('order', $dateQuery)
+        // Build the base query
+        $query = OrderItem::query()
+            ->selectRaw('category_id as id, category_id, product_id, SUM(quantity) as total_quantity, SUM(total) as total_sales')
             ->groupBy('category_id', 'product_id')
-            ->with(['category', 'product']);
+            ->with(['category', 'product', 'order']);
 
-        $items = $itemsQuery->get()->groupBy('category_id');
+        $filters = $request->get('filters', []);
+        $search = $request->get('search', '');
 
-        $categoryIds = $items->keys()->toArray();
-        $categories = Category::whereIn('id', $categoryIds)->get()->keyBy('id');
+        \Log::info('=== PDF DOWNLOAD DEBUG ===');
+        \Log::info('Filters received:', $filters);
+        \Log::info('Search received:', ['search' => $search]);
 
-        $today = Carbon::today();
+        // Apply filters - check isActive flag
+        $activeFilter = 'all'; // Default to all data
 
-        $pdf = Pdf::loadView('reports.item-sales-category', compact('items', 'categories', 'today', 'filter'))
-            ->setPaper('A4', 'portrait');
-
-        if ($mode === 'stream') {
-            return $pdf->stream('item_sales_' . $filter . '_' . $today->format('Y_m_d') . '.pdf');
+        if (empty($filters)) {
+            \Log::info('No filters received - showing all data');
+            // No filters at all - show all data
+        } else {
+            // Check which filter is actually active (isActive = "1")
+            if (isset($filters['today']['isActive']) && $filters['today']['isActive'] === "1") {
+                $query->whereHas('order', fn($q) => $q->whereDate('created_at', today()));
+                $activeFilter = 'today';
+                \Log::info('Applied TODAY filter');
+            }
+            elseif (isset($filters['this_week']['isActive']) && $filters['this_week']['isActive'] === "1") {
+                $query->whereHas('order', fn($q) => $q->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]));
+                $activeFilter = 'this_week';
+                \Log::info('Applied THIS WEEK filter');
+            }
+            elseif (isset($filters['this_month']['isActive']) && $filters['this_month']['isActive'] === "1") {
+                $query->whereHas('order', fn($q) => $q->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]));
+                $activeFilter = 'this_month';
+                \Log::info('Applied THIS MONTH filter');
+            }
+            elseif (isset($filters['all']['isActive']) && $filters['all']['isActive'] === "1") {
+                $activeFilter = 'all';
+                \Log::info('Applied ALL DATA filter - showing all data');
+            }
+            elseif (isset($filters['custom_date'])) {
+                $customDate = $filters['custom_date'];
+                if (isset($customDate['start_date']) && $customDate['start_date']) {
+                    $query->whereHas('order', fn($q) => $q->whereDate('created_at', '>=', $customDate['start_date']));
+                }
+                if (isset($customDate['end_date']) && $customDate['end_date']) {
+                    $query->whereHas('order', fn($q) => $q->whereDate('created_at', '<=', $customDate['end_date']));
+                }
+                $activeFilter = 'custom_date';
+                \Log::info('Applied CUSTOM DATE filter', $customDate);
+            }
+            else {
+                \Log::info('No active filters found in request - showing all data');
+                // No active filters - show all data
+            }
         }
 
-        return $pdf->download('item_sales_' . $filter . '_' . $today->format('Y_m_d') . '.pdf');
-    }
+        // Apply search
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('category', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })->orWhereHas('product', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+            });
+            \Log::info('Applied SEARCH filter: ' . $search);
+        }
 
-    // convenience wrappers
-    public function downloadCategoryReport(Request $request)
-    {
-        return $this->categorySalesReport($request, 'download');
-    }
+        // Get the SQL and data
+        $sql = $query->toSql();
+        $bindings = $query->getBindings();
 
-    public function printCategoryReport(Request $request)
-    {
-        return $this->categorySalesReport($request, 'stream');
+        $data = $query->get();
+
+        \Log::info('Query Results:', [
+            'sql' => $sql,
+            'bindings' => $bindings,
+            'data_count' => $data->count(),
+            'sample_record' => $data->first() ? [
+                'category_id' => $data->first()->category_id,
+                'product_id' => $data->first()->product_id,
+                'total_quantity' => $data->first()->total_quantity,
+                'total_sales' => $data->first()->total_sales,
+                'has_category' => !is_null($data->first()->category),
+                'has_product' => !is_null($data->first()->product),
+                'category_name' => $data->first()->category?->name,
+                'product_name' => $data->first()->product?->name,
+            ] : 'No data'
+        ]);
+
+        // Generate filename
+        $filename = 'item-sales-report-' . $activeFilter . '-' . now()->format('Y-m-d-H-i') . '.pdf';
+
+        $pdf = Pdf::loadView('pdf.item-sales', [
+            'data' => $data,
+            'filters' => $filters,
+            'search' => $search,
+            'activeFilter' => $activeFilter
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download($filename);
     }
 }

@@ -1,0 +1,9 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+
+/*.fi-page.fi-resource-create-record-page.fi-resource-orders{*/
+/*    @apply  bg-white p-10 rounded-2xl m-3;*/
+/*}*/

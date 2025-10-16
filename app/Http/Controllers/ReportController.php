@@ -11,61 +11,42 @@ class ReportController extends Controller
 {
     public function downloadPdf(Request $request)
     {
-        // Build the base query
-        $query = OrderItem::query()
-            ->selectRaw('category_id as id, category_id, product_id, SUM(quantity) as total_quantity, SUM(total) as total_sales')
-            ->groupBy('category_id', 'product_id')
-            ->with(['category', 'product', 'order']);
-
+        // Get filters from request
         $filters = $request->get('filters', []);
         $search = $request->get('search', '');
 
-        \Log::info('=== PDF DOWNLOAD DEBUG ===');
-        \Log::info('Filters received:', $filters);
-        \Log::info('Search received:', ['search' => $search]);
+        \Log::info('=== PDF CONTROLLER - START ===');
+        \Log::info('Received filters:', $filters);
+        \Log::info('Received search:', ['search' => $search]);
 
-        // Apply filters - check isActive flag
-        $activeFilter = 'all'; // Default to all data
+        // Start with base query
+        $query = OrderItem::query();
 
-        if (empty($filters)) {
-            \Log::info('No filters received - showing all data');
-            // No filters at all - show all data
-        } else {
-            // Check which filter is actually active (isActive = "1")
-            if (isset($filters['today']['isActive']) && $filters['today']['isActive'] === "1") {
-                $query->whereHas('order', fn($q) => $q->whereDate('created_at', today()));
-                $activeFilter = 'today';
-                \Log::info('Applied TODAY filter');
-            }
-            elseif (isset($filters['this_week']['isActive']) && $filters['this_week']['isActive'] === "1") {
-                $query->whereHas('order', fn($q) => $q->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]));
-                $activeFilter = 'this_week';
-                \Log::info('Applied THIS WEEK filter');
-            }
-            elseif (isset($filters['this_month']['isActive']) && $filters['this_month']['isActive'] === "1") {
-                $query->whereHas('order', fn($q) => $q->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]));
-                $activeFilter = 'this_month';
-                \Log::info('Applied THIS MONTH filter');
-            }
-            elseif (isset($filters['all']['isActive']) && $filters['all']['isActive'] === "1") {
-                $activeFilter = 'all';
-                \Log::info('Applied ALL DATA filter - showing all data');
-            }
-            elseif (isset($filters['custom_date'])) {
-                $customDate = $filters['custom_date'];
-                if (isset($customDate['start_date']) && $customDate['start_date']) {
-                    $query->whereHas('order', fn($q) => $q->whereDate('created_at', '>=', $customDate['start_date']));
-                }
-                if (isset($customDate['end_date']) && $customDate['end_date']) {
-                    $query->whereHas('order', fn($q) => $q->whereDate('created_at', '<=', $customDate['end_date']));
-                }
-                $activeFilter = 'custom_date';
-                \Log::info('Applied CUSTOM DATE filter', $customDate);
-            }
-            else {
-                \Log::info('No active filters found in request - showing all data');
-                // No active filters - show all data
-            }
+        // Apply date filters - check for '1' (string) since we converted them
+        $activeFilter = 'all';
+
+        if (isset($filters['today']) && $filters['today'] === '1') {
+            $query->whereDate('created_at', today());
+            $activeFilter = 'today';
+            \Log::info('✅ Applied TODAY filter');
+        }
+        elseif (isset($filters['yesterday']) && $filters['yesterday'] === '1') {
+            $query->whereDate('created_at', today()->subDay());
+            $activeFilter = 'yesterday';
+            \Log::info('✅ Applied YESTERDAY filter');
+        }
+        elseif (isset($filters['this_week']) && $filters['this_week'] === '1') {
+            $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            $activeFilter = 'this_week';
+            \Log::info('✅ Applied THIS WEEK filter');
+        }
+        elseif (isset($filters['this_month']) && $filters['this_month'] === '1') {
+            $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+            $activeFilter = 'this_month';
+            \Log::info('✅ Applied THIS MONTH filter');
+        }
+        else {
+            \Log::info('🔄 No date filter applied - showing ALL data');
         }
 
         // Apply search
@@ -77,41 +58,103 @@ class ReportController extends Controller
                     $q->where('name', 'like', "%{$search}%");
                 });
             });
-            \Log::info('Applied SEARCH filter: ' . $search);
+            \Log::info('🔍 Applied search: ' . $search);
         }
 
-        // Get the SQL and data
-        $sql = $query->toSql();
-        $bindings = $query->getBindings();
+        // Now apply grouping and get the data
+        $data = $query
+            ->select('order_id', 'category_id', 'product_id')
+            ->selectRaw('SUM(quantity) as total_quantity, SUM(total) as total_sales')
+            ->groupBy('order_id', 'category_id', 'product_id')
+            ->with(['category', 'product'])
+            ->orderBy('order_id')
+            ->get();
 
-        $data = $query->get();
 
-        \Log::info('Query Results:', [
-            'sql' => $sql,
-            'bindings' => $bindings,
-            'data_count' => $data->count(),
-            'sample_record' => $data->first() ? [
-                'category_id' => $data->first()->category_id,
-                'product_id' => $data->first()->product_id,
-                'total_quantity' => $data->first()->total_quantity,
-                'total_sales' => $data->first()->total_sales,
-                'has_category' => !is_null($data->first()->category),
-                'has_product' => !is_null($data->first()->product),
-                'category_name' => $data->first()->category?->name,
-                'product_name' => $data->first()->product?->name,
-            ] : 'No data'
-        ]);
+        \Log::info('=== PDF CONTROLLER - RESULTS ===');
+        \Log::info('Active filter: ' . $activeFilter);
+        \Log::info('Data count: ' . $data->count());
+        \Log::info('Sample data:', $data->take(2)->map(function($item) {
+            return [
+                'category' => $item->category->name ?? 'N/A',
+                'product' => $item->product->name ?? 'N/A',
+                'quantity' => $item->total_quantity,
+                'sales' => $item->total_sales,
+            ];
+        })->toArray());
 
-        // Generate filename
         $filename = 'item-sales-report-' . $activeFilter . '-' . now()->format('Y-m-d-H-i') . '.pdf';
 
         $pdf = Pdf::loadView('pdf.item-sales', [
             'data' => $data,
-            'filters' => $filters,
-            'search' => $search,
             'activeFilter' => $activeFilter
         ])->setPaper('a4', 'landscape');
 
         return $pdf->download($filename);
+    }
+    public function printView(Request $request)
+    {
+        $filters = $request->get('filters', []);
+        $search = $request->get('search', '');
+
+        \Log::info('=== PRINT VIEW - START ===');
+        \Log::info('Received filters:', $filters);
+        \Log::info('Received search:', ['search' => $search]);
+
+        $query = OrderItem::query()
+            ->selectRaw('order_id, category_id, product_id, SUM(quantity) as total_quantity, SUM(total) as total_sales')
+            ->groupBy('order_id', 'category_id', 'product_id')
+            ->with(['category', 'product'])
+            ->orderBy('order_id');
+
+        $activeFilter = 'all';
+
+        // 🔍 Apply filters - check for '1' (string) like in PDF download
+        if (isset($filters['today']) && $filters['today'] === '1') {
+            $query->whereDate('created_at', today());
+            $activeFilter = 'today';
+            \Log::info('✅ Applied TODAY filter for print');
+        }
+        elseif (isset($filters['yesterday']) && $filters['yesterday'] === '1') {
+            $query->whereDate('created_at', today()->subDay());
+            $activeFilter = 'yesterday';
+            \Log::info('✅ Applied YESTERDAY filter for print');
+        }
+        elseif (isset($filters['this_week']) && $filters['this_week'] === '1') {
+            $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            $activeFilter = 'this_week';
+            \Log::info('✅ Applied THIS WEEK filter for print');
+        }
+        elseif (isset($filters['this_month']) && $filters['this_month'] === '1') {
+            $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+            $activeFilter = 'this_month';
+            \Log::info('✅ Applied THIS MONTH filter for print');
+        }
+        else {
+            \Log::info('🔄 No date filter applied for print - showing ALL data');
+        }
+
+        // 🔍 Apply search if provided
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('category', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })->orWhereHas('product', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+            });
+            \Log::info('🔍 Applied search for print: ' . $search);
+        }
+
+        $data = $query->get();
+
+        \Log::info('=== PRINT VIEW - RESULTS ===');
+        \Log::info('Active filter: ' . $activeFilter);
+        \Log::info('Data count: ' . $data->count());
+
+        return view('pdf.item-sales-print', [
+            'data' => $data,
+            'activeFilter' => $activeFilter
+        ]);
     }
 }

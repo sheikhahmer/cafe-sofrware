@@ -8,4 +8,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateWaiter extends CreateRecord
 {
     protected static string $resource = WaiterResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

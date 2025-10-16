@@ -17,6 +17,7 @@ class OrderItem extends Model
         'price',
         'total',
         'kitchen_printed',
+        'receipt_printed',
     ];
 
     public function order()

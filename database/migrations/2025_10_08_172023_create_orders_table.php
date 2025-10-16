@@ -25,6 +25,7 @@ return new class extends Migration
             $table->decimal('grand_total', 15, 2)->nullable();
             $table->decimal('delivery_charges', 10, 2)->nullable();
             $table->string('status')->default('pending');
+            $table->foreignId('rider_id')->nullable();
             $table->timestamps();
         });
     }

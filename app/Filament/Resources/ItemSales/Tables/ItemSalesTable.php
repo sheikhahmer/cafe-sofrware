@@ -5,9 +5,11 @@ namespace App\Filament\Resources\ItemSales\Tables;
 use App\Models\OrderItem;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 class ItemSalesTable
 {
@@ -16,12 +18,18 @@ class ItemSalesTable
         return $table
             ->query(
                 fn (): Builder => OrderItem::query()
-                    ->selectRaw('category_id as id, category_id, product_id, SUM(quantity) as total_quantity, SUM(total) as total_sales')
+                    ->selectRaw('MIN(order_id) as order_id, category_id as id, category_id, product_id, SUM(quantity) as total_quantity, SUM(total) as total_sales')
                     ->groupBy('category_id', 'product_id')
+
                     ->with(['category', 'product'])
             // Remove the default filter from here - show ALL data by default
             )
             ->columns([
+                Tables\Columns\TextColumn::make('order_id')
+                    ->label('Order ID')
+                    ->sortable()
+                ->searchable(),
+
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Category')
                     ->sortable()
@@ -39,62 +47,25 @@ class ItemSalesTable
 
                 Tables\Columns\TextColumn::make('total_sales')
                     ->label('Total Sales')
-                    ->money('USD')
+                    ->money('PKR')
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('all')
-                    ->label('All Data')
-                    ->default() // This should make it active by default
-                    ->query(fn (Builder $query) => $query), // No filtering
-
-                Tables\Filters\Filter::make('today')
+                Filter::make('today')
                     ->label('Today')
-                    ->query(fn (Builder $query) =>
-                    $query->whereHas('order', fn ($q) =>
-                    $q->whereDate('created_at', today())
-                    )
-                    ),
+                    ->query(fn(Builder $query) => $query->whereDate('created_at', today())),
 
-                Tables\Filters\Filter::make('this_week')
+                Filter::make('yesterday')
+                    ->label('Yesterday')
+                    ->query(fn(Builder $query) => $query->whereDate('created_at', today()->subDay())),
+
+                Filter::make('this_week')
                     ->label('This Week')
-                    ->query(fn (Builder $query) =>
-                    $query->whereHas('order', fn ($q) =>
-                    $q->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
-                    )
-                    ),
+                    ->query(fn(Builder $query) => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])),
 
-                Tables\Filters\Filter::make('this_month')
+                Filter::make('this_month')
                     ->label('This Month')
-                    ->query(fn (Builder $query) =>
-                    $query->whereHas('order', fn ($q) =>
-                    $q->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
-                    )
-                    ),
-
-                Tables\Filters\Filter::make('custom_date')
-                    ->label('Custom Date Range')
-                    ->form([
-                        DatePicker::make('start_date')
-                            ->label('Start Date'),
-                        DatePicker::make('end_date')
-                            ->label('End Date'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['start_date'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereHas('order', fn ($q) =>
-                                $q->whereDate('created_at', '>=', $date)
-                                )
-                            )
-                            ->when(
-                                $data['end_date'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereHas('order', fn ($q) =>
-                                $q->whereDate('created_at', '<=', $date)
-                                )
-                            );
-                    }),
+                    ->query(fn(Builder $query) => $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])),
             ])
             ->headerActions([
                 Action::make('download_pdf')
@@ -105,12 +76,24 @@ class ItemSalesTable
                         $filters = $livewire->tableFilters ?? [];
                         $search = $livewire->tableSearch ?? '';
 
+                        Log::info('=== PDF ACTION - FILTERS ===');
+                        Log::info('Filters in action:', $filters);
+
+                        // Extract the isActive value from nested structure
+                        $filterData = [];
+                        foreach (['today', 'yesterday', 'this_week', 'this_month'] as $filter) {
+                            $isActive = isset($filters[$filter]['isActive']) && $filters[$filter]['isActive'] === true ? '1' : '0';
+                            $filterData[$filter] = $isActive;
+                            Log::info("Filter {$filter}: isActive = {$isActive}");
+                        }
+
                         $downloadUrl = route('item-sales.pdf.download', [
-                            'filters' => $filters,
+                            'filters' => $filterData,
                             'search' => $search,
                             'time' => now()->timestamp
                         ]);
 
+                        Log::info('Redirecting to: ' . $downloadUrl);
                         return redirect($downloadUrl);
                     }),
 
@@ -118,65 +101,23 @@ class ItemSalesTable
                     ->label('Print Report')
                     ->icon('heroicon-o-printer')
                     ->color('primary')
-                    ->action(function () {
-                        return <<<HTML
-                            <script>
-                                setTimeout(() => {
-                                    const style = document.createElement('style');
-                                    style.innerHTML = `
-                                        @media print {
-                                            .filament-header,
-                                            .filament-sidebar,
-                                            .filament-main-ctn > div:first-child,
-                                            .filament-tables-header-container,
-                                            .filament-tables-pagination-container,
-                                            .filament-tables-table > div:first-child,
-                                            [data-filament-component="header"] {
-                                                display: none !important;
-                                            }
-                                            .filament-tables-container {
-                                                box-shadow: none !important;
-                                                border: none !important;
-                                            }
-                                            .filament-tables-table table {
-                                                width: 100% !important;
-                                                border-collapse: collapse !important;
-                                            }
-                                            .filament-tables-table th,
-                                            .filament-tables-table td {
-                                                border: 1px solid #ddd !important;
-                                                padding: 8px !important;
-                                            }
-                                            body {
-                                                padding: 20px !important;
-                                                font-size: 14px !important;
-                                            }
-                                            .print-header {
-                                                text-align: center;
-                                                margin-bottom: 20px;
-                                                border-bottom: 2px solid #333;
-                                                padding-bottom: 10px;
-                                            }
-                                        }
-                                    `;
-                                    document.head.appendChild(style);
+                    ->action(function ($livewire) {
+                        $filters = $livewire->tableFilters ?? [];
+                        $search = $livewire->tableSearch ?? '';
 
-                                    // Add print header
-                                    const tableContainer = document.querySelector('.filament-tables-table');
-                                    const printHeader = document.createElement('div');
-                                    printHeader.className = 'print-header';
-                                    printHeader.innerHTML = '<h1>Item Sales Report</h1><p>Generated on: ' + new Date().toLocaleString() + '</p>';
-                                    tableContainer.parentNode.insertBefore(printHeader, tableContainer);
+                        $filterData = [];
+                        foreach (['today', 'yesterday', 'this_week', 'this_month'] as $filter) {
+                            $isActive = isset($filters[$filter]['isActive']) && $filters[$filter]['isActive'] === true ? '1' : '0';
+                            $filterData[$filter] = $isActive;
+                        }
 
-                                    window.print();
+                        $printUrl = route('item-sales.print', [
+                            'filters' => $filterData,
+                            'search' => $search,
+                            'time' => now()->timestamp
+                        ]);
 
-                                    setTimeout(() => {
-                                        document.head.removeChild(style);
-                                        printHeader.remove();
-                                    }, 1000);
-                                }, 100);
-                            </script>
-                        HTML;
+                        $livewire->js("window.open('{$printUrl}', '_blank')");
                     }),
             ])
             ->paginated([10, 25, 50, 100, 'all'])

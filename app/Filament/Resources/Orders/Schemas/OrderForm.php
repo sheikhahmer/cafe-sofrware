@@ -55,6 +55,13 @@ class OrderForm
                 ->label('Waiter')
                 ->visible(fn (Get $get) => $get('order_type') === 'dine_in'),
 
+            Select::make('rider_id')
+                ->label('Rider')
+                ->options(\App\Models\Rider::pluck('name', 'id')) // 👈 options source
+                ->searchable()
+                ->visible(fn (Get $get) => $get('order_type') === 'delivery')
+                ->required(fn (Get $get) => $get('order_type') === 'delivery'),
+
             // 🧾 Order Items
             Repeater::make('items')
                 ->relationship()
@@ -63,6 +70,7 @@ class OrderForm
                         ->label('Product')
                         ->options(Product::pluck('name', 'id'))
                         ->reactive()
+                        ->searchable()
                         ->afterStateUpdated(function ($state, Set $set) {
                             $product = Product::find($state);
                             $set('price', $product?->price ?? 0);

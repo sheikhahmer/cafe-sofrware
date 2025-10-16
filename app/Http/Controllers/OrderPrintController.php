@@ -9,26 +9,25 @@ class OrderPrintController extends Controller
 {
     public function kitchen(Order $order)
     {
-        // Fetch only the items that are NOT printed yet
-        $items = $order->items()->where('kitchen_printed', false)->get();
+        // Get comma-separated item IDs from query string
+        $itemIds = request('item_ids');
 
-        // If there are no new items to print, just redirect back with a message
-        if ($items->isEmpty()) {
-            return redirect()->back()->with('message', 'No new items to print.');
+        if ($itemIds) {
+            $itemIdsArray = explode(',', $itemIds);
+            $items = $order->items()->whereIn('id', $itemIdsArray)->get();
+        } else {
+            // Fallback for direct access
+            $items = $order->items()->where('kitchen_printed', false)->get();
         }
 
-        // Mark these items as printed
-        $order->items()->whereIn('id', $items->pluck('id'))->update(['kitchen_printed' => true]);
-
-        // Return your existing print view — but now it will only show the new items
         return view('print.kitchen', compact('order', 'items'));
     }
 
     public function receipt(Order $order)
     {
+        $order->items()->update(['receipt_printed' => true]);
         return view('print.receipt', compact('order'));
     }
-
     public function paid(Order $order)
     {
         if ($order->status !== 'paid') {

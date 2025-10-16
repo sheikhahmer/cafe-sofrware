@@ -23,6 +23,7 @@ class Order extends Model
         'gst_amount',
         'delivery_charges',
         'status',
+        'rider_id',
     ];
 
     public function items()
@@ -39,4 +40,10 @@ class Order extends Model
     {
         return $this->belongsTo(Waiter::class);
     }
+
+    public function rider()
+    {
+        return $this->belongsTo(Rider::class);
+    }
+
 }

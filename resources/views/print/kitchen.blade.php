@@ -21,7 +21,7 @@
     <tr>
         <th>Item</th>
         <th>Qty</th>
-        <th>Notes</th>
+        <th>Price</th>
     </tr>
     </thead>
     <tbody>
@@ -29,7 +29,7 @@
         <tr>
             <td>{{ $item->product->name }}</td>
             <td>{{ $item->quantity }}</td>
-            <td>-</td>
+            <td>{{ $item->price }}</td>
         </tr>
     @endforeach
     </tbody>

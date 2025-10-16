@@ -15,8 +15,14 @@ class OrdersTable
     {
         return $table
             ->columns([
+                TextColumn::make('id')->label('Order No')->sortable(),
                 TextColumn::make('customer_name')->label('Customer')->searchable(),
-                TextColumn::make('order_type')
+//                TextColumn::make('rider.name')
+//                    ->label('Rider')
+//                    ->sortable()
+//                    ->searchable(),
+
+        TextColumn::make('order_type')
                     ->label('Type')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
@@ -26,7 +32,6 @@ class OrdersTable
                         default => ucfirst(str_replace('_', ' ', $state)),
                     }),
 
-                TextColumn::make('bill_no')->label('Bill No'),
                 TextColumn::make('grand_total')->label('Total')->numeric(),
                 TextColumn::make('status')
                     ->label('Status')
@@ -36,41 +41,89 @@ class OrdersTable
                         'info' => 'printed',
                         'success' => 'paid',
                     ]),
-                TextColumn::make('created_at')->label('Created')->dateTime()->sortable(),
+
+                TextColumn::make('created_at')
+                    ->label('Order Date')
+                    ->date()
+                    ->sortable(),
+
             ])
 
             ->recordUrl(fn ($record) =>
-                // disable click-to-edit when paid
             $record->status === 'paid'
                 ? null
                 : route('filament.admin.resources.orders.edit', $record)
             )
 
             ->recordActions([
-                // ✏️ Edit — disabled if paid
                 EditAction::make()
                     ->disabled(fn ($record) => $record->status === 'paid'),
 
-                // 🍳 Kitchen Print — enabled until paid
-                Action::make('kitchen_print')
+                // 🍳 Kitchen Print — enabled only if there are unprinted items
+                Action::make('kitchenPrint')
                     ->label('Kitchen Print')
                     ->icon('heroicon-o-printer')
-                    ->color('gray')
-                    ->url(fn ($record) => route('orders.print.kitchen', $record))
-                    ->openUrlInNewTab()
-                    ->disabled(fn ($record) => $record->status === 'paid'),
+                    ->color(fn ($record) =>
+                    $record->items()->where('kitchen_printed', false)->exists() ? 'warning' : 'success'
+                    )
+                    ->requiresConfirmation()
+                    ->action(function ($record, $livewire) {
+                        // Get only unprinted items
+                        $unprintedItems = $record->items()->where('kitchen_printed', false)->get();
 
-                // 🧾 Print Only — enabled until paid
+                        if ($unprintedItems->isNotEmpty()) {
+                            // Mark them as printed
+                            $record->items()->whereIn('id', $unprintedItems->pluck('id'))->update(['kitchen_printed' => true]);
+
+                            // Build print URL with item IDs
+                            $itemIds = implode(',', $unprintedItems->pluck('id')->toArray());
+                            $url = route('orders.print.kitchen', ['order' => $record->id, 'item_ids' => $itemIds]);
+
+                            // Refresh the table instantly
+                            $livewire->dispatch('$refresh');
+
+                            // Open print window
+                            $livewire->js("window.open('{$url}', '_blank');");
+                        }
+                    })
+                    ->disabled(fn ($record) =>
+                    !$record->items()->where('kitchen_printed', false)->exists()
+                    )
+                    ->tooltip(fn ($record) =>
+                    $record->items()->where('kitchen_printed', false)->exists()
+                        ? 'Click to print new items'
+                        : 'Already printed all items'
+                    ),
+
+
+
+        // 🧾 Print Only — enabled if there are unprinted receipt items
                 Action::make('print_only')
                     ->label('Print Only')
                     ->icon('heroicon-o-printer')
                     ->color('info')
-                    ->url(fn ($record) => route('orders.print.receipt', $record))
-                    ->openUrlInNewTab()
                     ->requiresConfirmation()
-                    ->disabled(fn ($record) => $record->status === 'paid'),
+                    ->action(function ($record, $livewire) {
+                        // Mark items as receipt printed
+                        $record->items()->update(['receipt_printed' => true]);
 
-                // 💵 Paid Print — marks order as paid, disables all after
+                        // Refresh to disable button immediately
+                        $livewire->dispatch('$refresh');
+
+                        // Open print in new tab AFTER updating the database
+                        $url = route('orders.print.receipt', $record);
+                        $livewire->js("window.open('{$url}', '_blank');");
+                    })
+                    ->disabled(function ($record) {
+                        return !$record->items()->where('receipt_printed', false)->exists();
+                    })
+                    ->tooltip(fn ($record) =>
+                    $record->items()->where('receipt_printed', false)->exists()
+                        ? 'Click to print'
+                        : 'Already printed'
+                    ),
+
+                // 💵 Paid Print — marks order as paid
                 Action::make('paid_print')
                     ->label('Paid Print')
                     ->icon('heroicon-o-currency-dollar')
@@ -82,7 +135,12 @@ class OrdersTable
                         $url = route('orders.print.paid', $record);
                         $livewire->js("window.open('{$url}', '_blank');");
                     })
-                    ->disabled(fn ($record) => $record->status === 'paid'),
+                    ->disabled(fn ($record) => $record->status === 'paid')
+                    ->tooltip(fn ($record) =>
+                    $record->where('status' ,'pending')->exists()
+                        ? 'Click to print'
+                        : 'Already printed'
+                    ),
             ])
 
             ->toolbarActions([

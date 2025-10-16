@@ -70,6 +70,6 @@
     </tr>
 </table>
 
-<p class="center">Thank you for visiting Sara Cafe!</p>
+<p class="center">Thank you for visiting Masoom's Cafe!</p>
 </body>
 </html>

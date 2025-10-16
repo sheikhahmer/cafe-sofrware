@@ -18,7 +18,7 @@ class OrderForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('order')
+            Section::make('Add Order Details')
                 ->schema([
                     TextInput::make('customer_name')->label('Customer Name'),
                     TextInput::make('contact')->label('Contact'),

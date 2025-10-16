@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Tables\Schemas;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class TableForm
@@ -11,10 +12,13 @@ class TableForm
     {
         return $schema
             ->components([
-                TextInput::make('no')
-                    ->default(null),
-                TextInput::make('serial_no')
-                    ->default(null),
+                Section::make('Add Table Detais')->schema([
+                    TextInput::make('no')
+                        ->default(null),
+                    TextInput::make('serial_no')
+                        ->default(null),
+                ])->columnSpanFull()->columns(2)
+
             ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Waiters\Schemas;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class WaiterForm
@@ -11,10 +12,13 @@ class WaiterForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->default(null),
-                TextInput::make('contact')
-                    ->default(null),
+                Section::make('Add Waiter Details')->schema([
+                    TextInput::make('name')
+                        ->default(null),
+                    TextInput::make('contact')
+                        ->default(null),
+                ])->columnSpanFull()->columns(2)
+
             ]);
     }
 }

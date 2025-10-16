@@ -11,7 +11,7 @@ class CategoryForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-               Section::make("Categories")
+               Section::make("Add Category Details")
             ->schema([
                 TextInput::make('name')
                     ->required(),

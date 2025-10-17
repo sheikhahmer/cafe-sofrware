@@ -18,12 +18,15 @@ class ProductsTable
                     ->label('Category')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('price')
-                    ->searchable(),
                 TextColumn::make('description')
+                    ->label('Product Code')
                     ->searchable(),
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('price')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

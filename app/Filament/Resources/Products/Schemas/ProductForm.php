@@ -32,7 +32,7 @@ class ProductForm
                         ->required(),
 
                     TextInput::make('description')
-                        ->label('Description')
+                        ->label('Product Code')
                         ->required(),
                 ])->columnSpanFull()->columns(2)
 

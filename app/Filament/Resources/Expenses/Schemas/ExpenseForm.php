@@ -12,17 +12,19 @@ class ExpenseForm
     {
         return $schema
             ->components([
-                Section::make('Add Daily Expense Details')->schema([
-                    TextInput::make('account_description')
-                        ->disabled()
-                        ->default('DAILY EXPENSES'),
-                    TextInput::make('product')->label('Details')
-                        ->default(null),
-                    TextInput::make('debit')
-                        ->default(null),
-                    TextInput::make('credit')
-                        ->default(null),
-                ])->columnSpanFull()->columns(2)
+                Section::make('Add Daily Expense Details')
+                    ->schema([
+                        TextInput::make('product')
+                            ->label('Details')
+                            ->default(null)
+                            ->columnSpan(3),
+
+                        TextInput::make('debit')
+                            ->default(null)
+                            ->columnSpan(1),
+                    ])
+                    ->columns(4)
+                    ->columnSpanFull()
             ]);
     }
-}
+    }

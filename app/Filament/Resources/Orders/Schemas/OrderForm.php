@@ -70,7 +70,7 @@ class OrderForm
                         ->schema([
                             Select::make('product_id')
                                 ->label('Product')
-                                ->options(Product::pluck('name', 'id'))
+                                ->options(Product::pluck('name', 'id','description'))
                                 ->reactive()
                                 ->searchable()
                                 ->afterStateUpdated(function ($state, Set $set) {

@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\Orders\Widgets\MonthlyOrdersChart;
+use App\Filament\Resources\Orders\Widgets\PerDayOrdersChart;
 use App\Filament\Widgets\StatsOverView;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -43,6 +45,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
+                MonthlyOrdersChart::class,
+                PerDayOrdersChart::class,
                 StatsOverView::class,
 //                AccountWidget::class,
 //                FilamentInfoWidget::class,

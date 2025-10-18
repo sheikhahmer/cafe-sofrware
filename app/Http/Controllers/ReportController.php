@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -157,4 +158,79 @@ class ReportController extends Controller
             'activeFilter' => $activeFilter
         ]);
     }
+
+//    for sales order
+    public function downloadSalesOrderPdf(Request $request)
+    {
+        \Log::info('=== SALES ORDER PDF CONTROLLER - START ===');
+
+        // Business-day range: 10 AM today → 4 AM next day
+        $now = now();
+        $startOfDay = $now->copy()->setTime(10, 0, 0);
+        if ($now->lt($startOfDay)) {
+            $startOfDay->subDay();
+        }
+        $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0);
+
+        \Log::info('📅 Date range:', [
+            'start' => $startOfDay->toDateTimeString(),
+            'end' => $endOfDay->toDateTimeString(),
+        ]);
+
+        $query = Order::query()
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->orderBy('created_at', 'desc');
+
+        // Optional search
+        $search = $request->get('search', '');
+        if (!empty($search)) {
+            $query->where('customer_name', 'like', "%{$search}%");
+        }
+
+        $orders = $query->get();
+
+        \Log::info('Orders count: ' . $orders->count());
+
+        $filename = 'sales-orders-report-' . now()->format('Y-m-d-H-i') . '.pdf';
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-orders', [
+            'orders' => $orders,
+            'startOfDay' => $startOfDay,
+            'endOfDay' => $endOfDay,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download($filename);
+    }
+
+    public function printSalesOrderView(Request $request)
+    {
+        \Log::info('=== SALES ORDER PRINT VIEW - START ===');
+
+        // Business-day range: 10 AM today → 4 AM next day
+        $now = now();
+        $startOfDay = $now->copy()->setTime(10, 0, 0);
+        if ($now->lt($startOfDay)) {
+            $startOfDay->subDay();
+        }
+        $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0);
+
+        $query = Order::query()
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->orderBy('created_at', 'desc');
+
+        // Optional search
+        $search = $request->get('search', '');
+        if (!empty($search)) {
+            $query->where('customer_name', 'like', "%{$search}%");
+        }
+
+        $orders = $query->get();
+
+        return view('pdf.sales-orders-print', [
+            'orders' => $orders,
+            'startOfDay' => $startOfDay,
+            'endOfDay' => $endOfDay,
+        ]);
+    }
+
 }

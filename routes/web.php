@@ -13,3 +13,7 @@ Route::get('/orders/{order}/print/receipt', [OrderPrintController::class, 'recei
 Route::get('/orders/{order}/print/paid', [OrderPrintController::class, 'paid'])->name('orders.print.paid');
 Route::get('/item-sales/download-pdf', [ReportController::class, 'downloadPdf'])->name('item-sales.pdf.download');
 Route::get('/item-sales/print', [ReportController::class, 'printView'])->name('item-sales.print');
+// 🧾 Sales Order PDF & Print routes
+Route::get('/sales-orders/download-pdf', [ReportController::class, 'downloadSalesOrderPdf'])->name('sales-orders.pdf.download');
+Route::get('/sales-orders/print', [ReportController::class, 'printSalesOrderView'])->name('sales-orders.print');
+

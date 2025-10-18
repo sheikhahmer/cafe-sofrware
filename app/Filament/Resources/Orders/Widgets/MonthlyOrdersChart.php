@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class MonthlyOrdersChart extends ChartWidget
 {
-    protected ?string $heading = 'Monthly Orders Chart';
+    protected ?string $heading = 'Monthly Orders Sales Chart';
 
     protected function getData(): array
     {

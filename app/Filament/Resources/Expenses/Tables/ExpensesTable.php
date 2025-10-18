@@ -23,8 +23,6 @@ class ExpensesTable
                 TextColumn::make('debit')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('credit')
-                    ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

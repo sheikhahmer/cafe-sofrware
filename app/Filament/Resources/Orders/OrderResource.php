@@ -19,7 +19,7 @@ class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
 
-    protected static BackedEnum|string|null $navigationIcon = Heroicon::OutlinedReceiptPercent;
+    protected static BackedEnum|string|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
     protected static ?string $recordTitleAttribute = 'bill_no';
 

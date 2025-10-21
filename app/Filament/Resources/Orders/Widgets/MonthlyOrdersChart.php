@@ -12,11 +12,14 @@ class MonthlyOrdersChart extends ChartWidget
 
     protected function getData(): array
     {
+        $now = now();
+
+        // We'll shift times by -10 hours to align the 10 AM–4 AM window to midnight
         $orders = Order::select(
-            DB::raw('MONTH(created_at) as month'),
+            DB::raw("MONTH(DATE_SUB(created_at, INTERVAL 10 HOUR)) as month"),
             DB::raw('SUM(grand_total) as total_sales')
         )
-            ->whereYear('created_at', now()->year)
+            ->whereYear('created_at', $now->year)
             ->groupBy('month')
             ->pluck('total_sales', 'month')
             ->toArray();
@@ -40,6 +43,7 @@ class MonthlyOrdersChart extends ChartWidget
             'labels' => $labels,
         ];
     }
+
 
     protected function getType(): string
     {

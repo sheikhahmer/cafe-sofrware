@@ -47,4 +47,29 @@ class RiderResource extends Resource
             'edit' => EditRider::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view riders');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create riders');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit riders');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete riders');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view riders');
+    }
 }

@@ -47,4 +47,29 @@ class ExpenseResource extends Resource
             'edit' => EditExpense::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view expenses');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create expenses');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit expenses');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete expenses');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view expenses');
+    }
 }

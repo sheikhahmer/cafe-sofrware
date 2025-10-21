@@ -34,8 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->profile()
-//            ->brandLogo( new HtmlString('<img src="' . asset('assets/images/logo.png') . '" class="h-[5.5rem]" />'))
-//            ->brandLogoHeight('5.5rem')
+//            ->brandLogo(new HtmlString('<img src="' . asset('assets/images/logo.png') . '" class="brand-logo" />'))//            ->brandLogoHeight('auto')
 
             ->colors([
                 'primary' => Color::Amber,
@@ -50,8 +49,6 @@ class AdminPanelProvider extends PanelProvider
                 MonthlyOrdersChart::class,
                 PerDayOrdersChart::class,
                 StatsOverView::class,
-//                AccountWidget::class,
-//                FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

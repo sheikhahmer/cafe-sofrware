@@ -47,4 +47,29 @@ class ProductResource extends Resource
             'edit' => EditProduct::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view products');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create products');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit products');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete products');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view products');
+    }
 }

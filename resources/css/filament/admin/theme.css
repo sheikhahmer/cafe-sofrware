@@ -15,3 +15,9 @@
 .fi-page-header-main-ctn{
     @apply bg-white dark:bg-black p-8;
 }
+
+/* For login page specifically */
+.fi-simple-main-ctn {
+    background-image: url('/assets/images/login.jpg');
+    @apply bg-cover bg-center bg-no-repeat bg-fixed;
+}

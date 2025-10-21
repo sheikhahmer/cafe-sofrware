@@ -48,4 +48,29 @@ class CategoryResource extends Resource
             'edit' => EditCategory::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view categories');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create categories');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit categories');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete categories');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view categories');
+    }
 }

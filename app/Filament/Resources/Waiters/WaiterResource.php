@@ -47,4 +47,29 @@ class WaiterResource extends Resource
             'edit' => EditWaiter::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view waiters');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create waiters');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit waiters');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete waiters');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view waiters');
+    }
 }

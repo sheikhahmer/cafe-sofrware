@@ -33,4 +33,29 @@ class ItemSaleResource extends Resource
             'index' => ListItemSales::route('/'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view item sales');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create item sales');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit item sales');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete item sales');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view item sales');
+    }
 }

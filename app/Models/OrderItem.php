@@ -47,6 +47,18 @@ class OrderItem extends Model
                 $item->category_id = \App\Models\Product::where('id', $item->product_id)->value('category_id');
             }
         });
+
+        static::created(function ($item) {
+            $item->order?->recalculateTotals();
+        });
+
+        static::updated(function ($item) {
+            $item->order?->recalculateTotals();
+        });
+
+        static::deleted(function ($item) {
+            $item->order?->recalculateTotals();
+        });
     }
 
 }

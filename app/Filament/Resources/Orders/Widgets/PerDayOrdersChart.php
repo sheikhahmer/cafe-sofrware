@@ -12,36 +12,46 @@ class PerDayOrdersChart extends ChartWidget
 
     protected function getData(): array
     {
-        // Get today's date
-        $today = now()->toDateString();
+        $now = now();
 
-        // Get today's orders
+        // Start of business day → today at 10 AM
+        $startOfDay = $now->copy()->setTime(10, 0, 0);
+
+        // If current time is before 10 AM, move window to previous day
+        if ($now->lt($startOfDay)) {
+            $startOfDay->subDay();
+        }
+
+        // End of business day → next day 4 AM
+        $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0);
+
+        // 🟢 Fetch all orders within that 10 AM → 4 AM window
         $orders = Order::select('id', 'grand_total', 'created_at')
-            ->whereDate('created_at', $today) // Only fetch orders for today
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->orderBy('created_at')
             ->get();
 
         $labels = [];
         $sales = [];
 
-        // Loop through each order and prepare the data
         foreach ($orders as $order) {
-            // For each order, use the order's ID or the time of creation as the label
-            // You can customize this label (e.g., order number, or the time of order)
-            $labels[] = $order->id; // Using the order ID as a unique label
-            $sales[]  = (float) $order->grand_total; // The total sales for that order
+            // Example label: 10:30 AM or you can use $order->id
+            $labels[] = $order->created_at->format('h:i A');
+            $sales[]  = (float) $order->grand_total;
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Total Sales Today (By Order)',
+                    'label' => 'Total Sales (10 AM – 4 AM Window)',
                     'data' => $sales,
-                    'backgroundColor' => '#3b82f6', // You can change this color
+                    'backgroundColor' => '#3b82f6',
                 ],
             ],
-            'labels' => $labels, // Each order's ID or label
+            'labels' => $labels,
         ];
     }
+
 
 
 

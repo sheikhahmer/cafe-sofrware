@@ -4,13 +4,60 @@
 <head>
     <title>Paid Receipt</title>
     <style>
-        body { font-family: monospace; font-size: 13px; }
-        h2, h3 { text-align: center; margin: 0; }
-        .paid { text-align: center; color: green; font-weight: bold; margin: 10px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border-bottom: 1px dashed #000; padding: 4px; text-align: left; }
-        .totals td { border: none; }
+        body {
+            font-family: monospace;
+            font-size: 13px;
+            margin: 0;
+            padding: 10px;
+        }
+        h2, h3 {
+            text-align: center;
+            margin: 0;
+        }
+        .paid {
+            text-align: center;
+            color: green;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border-bottom: 1px dashed #000;
+            padding: 4px;
+        }
+        th {
+            text-align: left;
+        }
+        td:nth-child(2), td:nth-child(3), td:nth-child(4),
+        th:nth-child(2), th:nth-child(3), th:nth-child(4) {
+            text-align: right;
+        }
+        .totals {
+            margin-top: 5px;
+        }
+        .totals td {
+            border: none;
+            padding: 2px 4px;
+        }
+        .totals td:first-child {
+            text-align: left;
+        }
+        .totals td:last-child {
+            text-align: right;
+        }
+        .center {
+            text-align: center;
+            margin-top: 10px;
+        }
+        th, td {
+            white-space: nowrap;
+        }
     </style>
+
 </head>
 <body onload="window.print()">
 <h2>Masoom's Cafe</h2>
@@ -18,7 +65,7 @@
 <div class="paid">PAID ✔</div>
 
 <p><strong>Order #:</strong> {{ $order->id }}</p>
-<p><strong>Date:</strong> {{ $order->bill_date }}</p>
+<p><strong>Date:</strong> {{ $order->created_at->format('F j, Y') }}</p>
 <p><strong>Customer:</strong> {{ $order->customer_name ?? 'Walk-in' }}</p>
 
 <table>

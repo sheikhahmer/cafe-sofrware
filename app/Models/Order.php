@@ -46,4 +46,32 @@ class Order extends Model
         return $this->belongsTo(Rider::class);
     }
 
+
+    public function recalculateTotals()
+    {
+        // 1️⃣ Total of all items
+        $itemsTotal = $this->items()->sum(\DB::raw('price * quantity'));
+
+        // 2️⃣ Calculate service charge (only for dine-in)
+        $serviceCharge = 0;
+        if ($this->order_type === 'dine_in') {
+            $serviceCharge = round($itemsTotal * 0.07, 2);
+        }
+
+        // 3️⃣ Calculate discounts
+        $discountPercent = $this->discount_percentage ?? 0;
+        $manualDiscount = $this->manual_discount ?? 0;
+        $discountAmount = ($itemsTotal * $discountPercent / 100) + $manualDiscount;
+
+        // 4️⃣ Calculate grand total
+        $delivery = $this->delivery_charges ?? 0;
+        $grandTotal = $itemsTotal - $discountAmount + $serviceCharge + $delivery;
+
+        // 5️⃣ Save everything
+        $this->update([
+            'service_charges' => $serviceCharge,
+            'grand_total' => $grandTotal,
+        ]);
+    }
+
 }

@@ -3,12 +3,52 @@
 <head>
     <title>Customer Receipt</title>
     <style>
-        body { font-family: monospace; font-size: 13px; }
-        h2 { text-align: center; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border-bottom: 1px dashed #000; padding: 4px; text-align: left; }
-        .totals td { border: none; }
-        .center { text-align: center; }
+        body {
+            font-family: monospace;
+            font-size: 13px;
+            margin: 0;
+            padding: 10px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border-bottom: 1px dashed #000;
+            padding: 4px;
+        }
+        th {
+            text-align: left;
+        }
+        td:nth-child(2), td:nth-child(3), td:nth-child(4),
+        th:nth-child(2), th:nth-child(3), th:nth-child(4) {
+            text-align: right;
+        }
+        .totals {
+            margin-top: 5px;
+        }
+        .totals td {
+            border: none;
+            padding: 2px 4px;
+        }
+        .totals td:first-child {
+            text-align: left;
+        }
+        .totals td:last-child {
+            text-align: right;
+        }
+        .center {
+            text-align: center;
+            margin-top: 10px;
+        }
+        th, td {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body onload="window.print()">
@@ -42,26 +82,29 @@
 <table class="totals" width="100%">
     <tr>
         <td>Subtotal</td>
-        <td class="right">{{ number_format($order->items->sum('total'), 2) }}</td>
+        <td>{{ number_format($order->items->sum('total'), 2) }}</td>
     </tr>
     @if ($order->service_charges > 0)
         <tr>
             <td>Service Charges (7%)</td>
-            <td class="right">{{ number_format($order->service_charges, 2) }}</td>
+            <td>{{ number_format($order->service_charges, 2) }}</td>
         </tr>
     @endif
     @if ($order->delivery_charges > 0)
         <tr>
             <td>Delivery Charges</td>
-            <td class="right">{{ number_format($order->delivery_charges, 2) }}</td>
+            <td>{{ number_format($order->delivery_charges, 2) }}</td>
         </tr>
     @endif
-    @if ($order->manual_discount > 0 || $order->discount_percentage > 0)
+    @if ($order->discount_percentage > 0)
         <tr>
-            <td>Discount</td>
-            <td class="right">
-                -{{ number_format($order->manual_discount + ($order->items->sum('total') * $order->discount_percentage / 100), 2) }}
-            </td>
+            <td>Discount ({{ (int) $order->discount_percentage }}%)</td>
+            <td>-{{ number_format(($order->items->sum('total') * $order->discount_percentage / 100), 2) }}</td>
+        </tr>
+    @elseif ($order->manual_discount > 0)
+        <tr>
+            <td>Discount (Manual)</td>
+            <td>-{{ number_format($order->manual_discount, 2) }}</td>
         </tr>
     @endif
     <tr>

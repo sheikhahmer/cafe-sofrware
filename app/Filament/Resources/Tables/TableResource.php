@@ -47,4 +47,29 @@ class TableResource extends Resource
             'edit' => EditTable::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view tables');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create tables');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit tables');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete tables');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view tables');
+    }
 }

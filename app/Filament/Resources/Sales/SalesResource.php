@@ -51,4 +51,29 @@ class SalesResource extends Resource
 //            'edit' => EditSales::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view order sales');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create order sales');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit order sales');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete order sales');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view order sales');
+    }
 }

@@ -79,16 +79,19 @@ class OrderForm
                                 })
                                 ->required(),
 
+                            TextInput::make('price')->numeric()->required(),
+
                             TextInput::make('quantity')
                                 ->numeric()
                                 ->reactive()
+                                ->debounce(300)
                                 ->afterStateUpdated(function ($state, Get $get, Set $set) {
                                     $set('total', ($get('price') ?? 0) * ($state ?? 0));
                                     static::updateGrandTotal($get, $set);
                                 })
                                 ->required(),
 
-                            TextInput::make('price')->numeric()->required(),
+
                             TextInput::make('total')
                                 ->numeric()
                                 ->disabled()
@@ -97,8 +100,7 @@ class OrderForm
                         ->columns(4)
                         ->columnSpanFull()
                         ->createItemButtonLabel('Add Item')
-                        ->reactive()
-                        ->afterStateUpdated(fn(Get $get, Set $set) => static::updateGrandTotal($get, $set)),
+                        ->reactive(),
 
                     // 💰 Auto-calculated 7% service charge for dine-in
                     TextInput::make('service_charges')
@@ -114,16 +116,31 @@ class OrderForm
                         ->reactive()
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
-                    // Discounts and Total
+                    // 💰 Discounts and Total
                     TextInput::make('discount_percentage')
                         ->numeric()
                         ->reactive()
-                        ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
+                        ->debounce(300)
+                        ->disabled(fn (Get $get) => !empty($get('manual_discount'))) // Disable if manual discount is entered
+                        ->afterStateUpdated(function ($state, Get $get, Set $set) {
+                            if (!empty($state)) {
+                                $set('manual_discount', null); // Reset manual discount when percentage entered
+                            }
+                            static::updateGrandTotal($get, $set);
+                        }),
 
                     TextInput::make('manual_discount')
                         ->numeric()
                         ->reactive()
-                        ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
+                        ->debounce(300)
+                        ->disabled(fn (Get $get) => !empty($get('discount_percentage'))) // Disable if percentage is entered
+                        ->afterStateUpdated(function ($state, Get $get, Set $set) {
+                            if (!empty($state)) {
+                                $set('discount_percentage', null); // Reset percentage when manual discount entered
+                            }
+                            static::updateGrandTotal($get, $set);
+                        }),
+
 
                     TextInput::make('grand_total')
                         ->numeric()

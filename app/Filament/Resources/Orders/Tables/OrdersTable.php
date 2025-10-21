@@ -6,6 +6,8 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -17,10 +19,6 @@ class OrdersTable
             ->columns([
                 TextColumn::make('id')->label('Order No')->sortable(),
                 TextColumn::make('customer_name')->label('Customer')->searchable(),
-//                TextColumn::make('rider.name')
-//                    ->label('Rider')
-//                    ->sortable()
-//                    ->searchable(),
 
         TextColumn::make('order_type')
                     ->label('Type')
@@ -57,7 +55,8 @@ class OrdersTable
 
             ->recordActions([
                 EditAction::make()
-                    ->disabled(fn ($record) => $record->status === 'paid'),
+                    ->visible(fn () => auth()->user()->hasRole('Admin')),
+//                    ->disabled(fn ($record) => $record->status === 'paid'),
 
                 // 🍳 Kitchen Print — enabled only if there are unprinted items
                 Action::make('kitchenPrint')
@@ -141,12 +140,86 @@ class OrdersTable
                         ? 'Click to print'
                         : 'Already printed'
                     ),
-            ])
+
+                Action::make('addItem')
+                    ->label('Add Item')
+                    ->icon('heroicon-o-plus-circle')
+                    ->color('primary')
+                    ->visible(fn () => auth()->user()->hasRole('User'))
+                    ->disabled(fn ($record) => $record->status === 'paid')
+                    ->modalHeading('Add Item to Order')
+                    ->form([
+                        Select::make('product_id')
+                            ->label('Product')
+                            ->options(\App\Models\Product::pluck('name', 'id'))
+                            ->searchable()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                $product = \App\Models\Product::find($state);
+                                $set('price', $product?->price ?? 0);
+                            })
+                            ->required(),
+
+                        TextInput::make('quantity')
+                            ->numeric()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                $set('total', ($get('price') ?? 0) * ($state ?? 0));
+                            })
+                            ->required(),
+
+                        TextInput::make('price')
+                            ->numeric()
+                            ->required(),
+
+                        TextInput::make('total')
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated(),
+                    ])
+                    ->action(function (array $data, $record, $livewire) {
+
+                        // 🟢 1. Create new item
+                        $record->items()->create([
+                            'product_id' => $data['product_id'],
+                            'price'      => $data['price'],
+                            'quantity'   => $data['quantity'],
+                            'total'      => $data['total'],
+                        ]);
+
+                        // 🟢 2. Recalculate totals
+                        $itemsTotal = $record->items()->sum('total');
+                        $serviceCharges = $record->service_charges ?? 0;
+
+                        // grand_total = items total + service charge
+                        $grandTotal = $itemsTotal + $serviceCharges;
+
+                        // 🟢 3. Update the order record
+                        $record->update([
+                            'grand_total' => $grandTotal,
+                        ]);
+
+                        // 🟢 4. Refresh and notify
+                        $livewire->dispatch('$refresh');
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Item added successfully!')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn ($record) => $record->exists && auth()->user()->hasRole('User'))
+                    ])
 
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+
+            ->modifyQueryUsing(function ($query) {
+            if (auth()->user()->hasRole('User')) {
+                $query->where('status', '!=', 'paid');
+            }
+        });
     }
 }

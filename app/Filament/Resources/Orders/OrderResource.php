@@ -56,4 +56,35 @@ class OrderResource extends Resource
             MonthlyOrdersChart::class,
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view orders');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create orders');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit orders');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete orders');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view orders');
+    }
+
+    protected function afterSave(): void
+    {
+        $this->record->recalculateTotals();
+    }
+
 }

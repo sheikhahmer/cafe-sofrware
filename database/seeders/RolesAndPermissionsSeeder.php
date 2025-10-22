@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Models\User;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -12,7 +13,6 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 🔹 Define all permissions for your modules
         $modules = [
             'orders',
             'categories',
@@ -33,14 +33,10 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => "delete {$module}"]);
         }
 
-        // 🔹 Create roles
         $adminRole = Role::firstOrCreate(['name' => 'Admin']);
         $staffRole = Role::firstOrCreate(['name' => 'User']);
-
-        // 🔹 Give full permissions to Admin
         $adminRole->givePermissionTo(Permission::all());
 
-        // 🔹 Staff gets limited permissions
         $staffPermissions = Permission::whereIn('name', [
             'view orders',
             'view products',
@@ -50,8 +46,10 @@ class RolesAndPermissionsSeeder extends Seeder
         ])->get();
 
         $staffRole->givePermissionTo($staffPermissions);
-
-        // Refresh cache again
+        $adminUser = User::where('email', 'admin@example.com')->first();
+        if ($adminUser) {
+            $adminUser->assignRole($adminRole);
+        }
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }

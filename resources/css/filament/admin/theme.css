@@ -19,5 +19,17 @@
 /* For login page specifically */
 .fi-simple-main-ctn {
     background-image: url('/assets/images/login.jpg');
-    @apply bg-cover bg-center bg-no-repeat bg-fixed;
+    @apply bg-cover bg-center bg-no-repeat;
 }
+ .fi-sidebar-nav{
+     @apply bg-white dark:bg-black;
+ }
+
+
+/*.brand-logo{*/
+/*    @apply w-[400px] h-[300px];*/
+/*}*/
+
+/*.fi-logo{*/
+/*   height: 300px !important;*/
+/*}*/

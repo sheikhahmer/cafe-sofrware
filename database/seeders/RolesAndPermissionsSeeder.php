@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Models\User;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -26,6 +27,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'roles'
         ];
 
+        // Create permissions for all modules
         foreach ($modules as $module) {
             Permission::firstOrCreate(['name' => "view {$module}"]);
             Permission::firstOrCreate(['name' => "create {$module}"]);
@@ -35,21 +37,30 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 🔹 Create roles
         $adminRole = Role::firstOrCreate(['name' => 'Admin']);
-        $staffRole = Role::firstOrCreate(['name' => 'User']);
+        $userRole = Role::firstOrCreate(['name' => 'User']);
 
-        // 🔹 Give full permissions to Admin
+        // 🔹 Give all permissions to Admin
         $adminRole->givePermissionTo(Permission::all());
 
-        // 🔹 Staff gets limited permissions
-        $staffPermissions = Permission::whereIn('name', [
-            'view orders',
-            'view products',
-            'view item sales',
-            'view order sales',
+        // 🔹 Assign permissions for creating orders and expenses to User
+        $userPermissions = Permission::whereIn('name', [
             'create orders',
+            'create expenses',
         ])->get();
 
-        $staffRole->givePermissionTo($staffPermissions);
+        // Assign the permissions to the User role
+        $userRole->givePermissionTo($userPermissions);
+
+        // 🔹 Assign roles to users based on email
+        $adminUser = User::where('email', 'admin@example.com')->first();
+        if ($adminUser) {
+            $adminUser->assignRole($adminRole); // Assign admin role to admin@example.com
+        }
+
+        $user = User::where('email', 'user@example.com')->first();
+        if ($user) {
+            $user->assignRole($userRole); // Assign user role to user@example.com
+        }
 
         // Refresh cache again
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();

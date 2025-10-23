@@ -118,18 +118,23 @@ class OrderForm
 
                     // 💰 Discounts and Total
                     TextInput::make('discount_percentage')
-                        ->numeric()
+                        ->mask(fn (TextInput\Mask $mask) =>
+                        $mask->numeric()
+                            ->thousandsSeparator('')
+                            ->decimalSeparator('.')
+                            ->normalizeZeros(false)
+                        )
                         ->reactive()
                         ->debounce(300)
-                        ->disabled(fn (Get $get) => !empty($get('manual_discount'))) // Disable if manual discount is entered
+                        ->disabled(fn (Get $get) => !empty($get('manual_discount')))
                         ->afterStateUpdated(function ($state, Get $get, Set $set) {
                             if (!empty($state)) {
-                                $set('manual_discount', null); // Reset manual discount when percentage entered
+                                $set('manual_discount', null);
                             }
                             static::updateGrandTotal($get, $set);
                         }),
 
-                    TextInput::make('manual_discount')
+        TextInput::make('manual_discount')
                         ->numeric()
                         ->reactive()
                         ->debounce(300)

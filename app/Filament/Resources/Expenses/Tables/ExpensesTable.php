@@ -37,6 +37,7 @@ class ExpensesTable
             ])
             ->headerActions([
                 Action::make('download_pdf')
+                    ->visible(fn () => auth()->user()->hasRole('Admin'))
                     ->label('Download PDF')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success')
@@ -47,6 +48,7 @@ class ExpensesTable
                     }),
 
                 Action::make('print')
+                    ->visible(fn () => auth()->user()->hasRole('Admin'))
                     ->label('Print Report')
                     ->icon('heroicon-o-printer')
                     ->color('primary')

@@ -21,3 +21,11 @@
     background-image: url('/assets/images/login.jpg');
     @apply bg-cover bg-center bg-no-repeat bg-fixed;
 }
+
+.brand-logo{
+    @apply h-[40px] w-[150px]
+}
+
+.fi-logo {
+    height: 45px !important;
+}

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Orders\Tables;
 
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -217,9 +218,20 @@ class OrdersTable
             ])
 
             ->modifyQueryUsing(function ($query) {
-            if (auth()->user()->hasRole('User')) {
-                $query->where('status', '!=', 'paid');
-            }
-        });
+
+                if (auth()->user()->hasRole('User')) {
+                    $query->where('status', '!=', 'paid');
+                }
+
+                $now = now();
+                $startOfDay = $now->copy()->setTime(10, 0, 0);
+                if ($now->lt($startOfDay)) {
+                    $startOfDay->subDay();
+                }
+
+                $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0);
+                $query->whereBetween('created_at', [$startOfDay, $endOfDay]);
+            });
+
     }
 }

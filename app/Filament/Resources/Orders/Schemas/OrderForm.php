@@ -88,7 +88,7 @@ class OrderForm
                                 })
                                 ->required(),
 
-                            TextInput::make('price')->numeric()->required()->disabled(),
+                            TextInput::make('price')->numeric()->required()->disabled()->dehydrated(),
                             TextInput::make('total')
                                 ->numeric()
                                 ->disabled()

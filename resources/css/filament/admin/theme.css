@@ -29,3 +29,51 @@
 .fi-logo {
     height: 45px !important;
 }
+
+
+/* Sidebar */
+.fi-sidebar-nav {
+    @apply bg-white;
+}
+
+li.fi-sidebar-item.fi-active.fi-sidebar-item-has-url > .fi-sidebar-item-btn {
+    @apply bg-[#F0A202];  /* Using #F0A202 for selected tab background */
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
+    @apply text-white;
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon {
+    @apply text-white;
+}
+
+
+.dashboard-stat-title {
+    @apply text-sm font-medium text-gray-500;
+}
+
+.dashboard-stat-value {
+    @apply mt-2 text-3xl font-bold text-gray-800;
+}
+
+.dashboard-stat-description {
+    @apply mt-1 text-sm text-gray-500;
+}
+
+.dashboard-stat-icon {
+    @apply flex items-center justify-center w-12 h-12 bg-gray-200 rounded-lg
+    transition-colors duration-300 ease-in-out group-hover:bg-[#F0A202];  /* Lighter hover background with #F0A202 */
+}
+
+.dashboard-stat-icon svg {
+    @apply w-6 h-6 text-gray-600 transition-colors duration-300 ease-in-out group-hover:text-white;
+}
+
+section.fi-section {
+    @apply bg-transparent;
+}
+
+.fi-sidebar-group-label {
+    @apply text-[#F0A202];  /* Using #F0A202 for group label */
+}

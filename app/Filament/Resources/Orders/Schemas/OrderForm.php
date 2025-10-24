@@ -82,6 +82,7 @@ class OrderForm
                             TextInput::make('quantity')
                                 ->numeric()
                                 ->reactive()
+                                ->debounce(1000)
                                 ->afterStateUpdated(function ($state, Get $get, Set $set) {
                                     $set('total', ($get('price') ?? 0) * ($state ?? 0));
                                     static::updateGrandTotal($get, $set);
@@ -119,12 +120,14 @@ class OrderForm
                         ->numeric()
                         ->label('Discount Percentage %')
                         ->reactive()
+                        ->debounce(1000)
                         ->disabled(fn($get) => $get('manual_discount') !== null)  // Disable if manual discount is set
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
                     TextInput::make('manual_discount')
                         ->numeric()
                         ->reactive()
+                        ->debounce(1000)
                         ->disabled(fn($get) => $get('discount_percentage') !== null)  // Disable if percentage discount is set
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
@@ -143,7 +146,7 @@ class OrderForm
     protected static function updateGrandTotal(Get $get, Set $set): void
     {
         $itemsTotal = collect($get('items') ?? [])
-            ->sum(fn($item) => ($item['price'] ?? 0) * ($item['quantity'] ?? 0));
+            ->sum(fn($item) => ((float)($item['price'] ?? 0)) * ((float)($item['quantity'] ?? 0)));
 
         $discountPercent = $get('discount_percentage') ?? 0;
         $manualDiscount = $get('manual_discount') ?? 0;
@@ -169,4 +172,5 @@ class OrderForm
 
         $set('grand_total', $grandTotal);
     }
+
 }

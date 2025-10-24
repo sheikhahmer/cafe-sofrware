@@ -21,15 +21,20 @@ class OrdersTable
                 TextColumn::make('id')->label('Order No')->sortable(),
                 TextColumn::make('customer_name')->label('Customer')->searchable(),
 
-        TextColumn::make('order_type')
+                TextColumn::make('order_type')
                     ->label('Type')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'dine_in' => 'Dine In',
-                        'take_away' => 'Take Away',
+                        'takeaway' => 'Take Away',
                         'delivery' => 'Delivery',
                         default => ucfirst(str_replace('_', ' ', $state)),
-                    }),
+                    })
+                    ->colors([
+                        'warning' => 'dine_in',
+                        'danger' => 'takeaway',
+                        'success' => 'delivery',
+                    ]),
 
                 TextColumn::make('grand_total')->label('Total')->numeric(),
                 TextColumn::make('status')
@@ -163,6 +168,7 @@ class OrdersTable
 
                         TextInput::make('quantity')
                             ->numeric()
+                            ->debounce(300)
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $get, callable $set) {
                                 $set('total', ($get('price') ?? 0) * ($state ?? 0));
@@ -171,6 +177,8 @@ class OrdersTable
 
                         TextInput::make('price')
                             ->numeric()
+                            ->disabled()
+                            ->dehydrated()
                             ->required(),
 
                         TextInput::make('total')

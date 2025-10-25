@@ -121,6 +121,21 @@ class ItemSalesTable
                     }),
             ])
             ->paginated([10, 25, 50, 100, 'all'])
+            ->modifyQueryUsing(function ($query) {
+
+                if (auth()->user()->hasRole('User')) {
+                    $query->where('status', '!=', 'paid');
+                }
+
+                $now = now();
+                $startOfDay = $now->copy()->setTime(10, 0, 0);
+                if ($now->lt($startOfDay)) {
+                    $startOfDay->subDay();
+                }
+
+                $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0);
+                $query->whereBetween('created_at', [$startOfDay, $endOfDay]);
+            })
             ->defaultPaginationPageOption(50);
     }
 }

@@ -23,34 +23,43 @@ class ReportController extends Controller
         // Start with base query
         $query = OrderItem::query();
 
-        // Apply date filters - check for '1' (string) since we converted them
-        $activeFilter = 'all';
+        // Get current time to check the window
+        $now = now();
+        $startOfDay = $now->copy()->setTime(10, 0, 0);
+        if ($now->lt($startOfDay)) {
+            // If it's before 10 AM, use the previous day's 10 AM to 4 AM window
+            $startOfDay->subDay();
+        }
+        $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0); // End at 4 AM the next day
 
+        // Apply the time filter based on 10 AM to 4 AM window
+        $query->whereBetween('created_at', [$startOfDay, $endOfDay]);
+
+        \Log::info('✅ Applied time filter: ' . $startOfDay->format('Y-m-d H:i:s') . ' to ' . $endOfDay->format('Y-m-d H:i:s'));
+
+        // Apply other filters (today, yesterday, etc.)
+        $activeFilter = 'all';
         if (isset($filters['today']) && $filters['today'] === '1') {
             $query->whereDate('created_at', today());
             $activeFilter = 'today';
             \Log::info('✅ Applied TODAY filter');
-        }
-        elseif (isset($filters['yesterday']) && $filters['yesterday'] === '1') {
+        } elseif (isset($filters['yesterday']) && $filters['yesterday'] === '1') {
             $query->whereDate('created_at', today()->subDay());
             $activeFilter = 'yesterday';
             \Log::info('✅ Applied YESTERDAY filter');
-        }
-        elseif (isset($filters['this_week']) && $filters['this_week'] === '1') {
+        } elseif (isset($filters['this_week']) && $filters['this_week'] === '1') {
             $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
             $activeFilter = 'this_week';
             \Log::info('✅ Applied THIS WEEK filter');
-        }
-        elseif (isset($filters['this_month']) && $filters['this_month'] === '1') {
+        } elseif (isset($filters['this_month']) && $filters['this_month'] === '1') {
             $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
             $activeFilter = 'this_month';
             \Log::info('✅ Applied THIS MONTH filter');
-        }
-        else {
+        } else {
             \Log::info('🔄 No date filter applied - showing ALL data');
         }
 
-        // Apply search
+        // Apply search filter
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->whereHas('category', function ($q) use ($search) {
@@ -70,7 +79,6 @@ class ReportController extends Controller
             ->with(['category', 'product'])
             ->orderBy('order_id')
             ->get();
-
 
         \Log::info('=== PDF CONTROLLER - RESULTS ===');
         \Log::info('Active filter: ' . $activeFilter);
@@ -93,6 +101,7 @@ class ReportController extends Controller
 
         return $pdf->download($filename);
     }
+
     public function printView(Request $request)
     {
         $filters = $request->get('filters', []);
@@ -102,36 +111,45 @@ class ReportController extends Controller
         \Log::info('Received filters:', $filters);
         \Log::info('Received search:', ['search' => $search]);
 
+        // Initialize the base query
         $query = OrderItem::query()
             ->selectRaw('order_id, category_id, product_id, SUM(quantity) as total_quantity, SUM(total) as total_sales')
             ->groupBy('order_id', 'category_id', 'product_id')
             ->with(['category', 'product'])
             ->orderBy('order_id');
 
-        $activeFilter = 'all';
+        // Get current time to check the window
+        $now = now();
+        $startOfDay = $now->copy()->setTime(10, 0, 0); // 10 AM today
+        if ($now->lt($startOfDay)) {
+            // If it's before 10 AM, use the previous day's 10 AM to 4 AM window
+            $startOfDay->subDay();
+        }
+        $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0); // 4 AM next day
 
-        // 🔍 Apply filters - check for '1' (string) like in PDF download
+        // Apply the time filter based on the 10 AM to 4 AM window
+        $query->whereBetween('created_at', [$startOfDay, $endOfDay]);
+        \Log::info('✅ Applied time filter for print: ' . $startOfDay->format('Y-m-d H:i:s') . ' to ' . $endOfDay->format('Y-m-d H:i:s'));
+
+        // 🔍 Apply other filters (today, yesterday, etc.)
+        $activeFilter = 'all';
         if (isset($filters['today']) && $filters['today'] === '1') {
             $query->whereDate('created_at', today());
             $activeFilter = 'today';
             \Log::info('✅ Applied TODAY filter for print');
-        }
-        elseif (isset($filters['yesterday']) && $filters['yesterday'] === '1') {
+        } elseif (isset($filters['yesterday']) && $filters['yesterday'] === '1') {
             $query->whereDate('created_at', today()->subDay());
             $activeFilter = 'yesterday';
             \Log::info('✅ Applied YESTERDAY filter for print');
-        }
-        elseif (isset($filters['this_week']) && $filters['this_week'] === '1') {
+        } elseif (isset($filters['this_week']) && $filters['this_week'] === '1') {
             $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
             $activeFilter = 'this_week';
             \Log::info('✅ Applied THIS WEEK filter for print');
-        }
-        elseif (isset($filters['this_month']) && $filters['this_month'] === '1') {
+        } elseif (isset($filters['this_month']) && $filters['this_month'] === '1') {
             $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
             $activeFilter = 'this_month';
             \Log::info('✅ Applied THIS MONTH filter for print');
-        }
-        else {
+        } else {
             \Log::info('🔄 No date filter applied for print - showing ALL data');
         }
 
@@ -153,11 +171,13 @@ class ReportController extends Controller
         \Log::info('Active filter: ' . $activeFilter);
         \Log::info('Data count: ' . $data->count());
 
+        // Return view for printing
         return view('pdf.item-sales-print', [
             'data' => $data,
             'activeFilter' => $activeFilter
         ]);
     }
+
 
 //    for sales order
     public function downloadSalesOrderPdf(Request $request)

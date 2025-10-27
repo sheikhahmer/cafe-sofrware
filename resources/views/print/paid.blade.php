@@ -100,8 +100,8 @@
         <tr>
             <td>{{ $item->product->name }}</td>
             <td>{{ $item->quantity }}</td>
-            <td>{{ number_format($item->price, 2) }}</td>
-            <td>{{ number_format($item->total, 2) }}</td>
+            <td>{{ number_format($item->price) }}</td>
+            <td>{{ number_format($item->total) }}</td>
         </tr>
     @endforeach
     </tbody>
@@ -123,35 +123,41 @@
 <table class="totals" width="100%">
     <tr>
         <td>Subtotal</td>
-        <td>{{ number_format($itemsTotal, 2) }}</td>
+        <td>{{ number_format($itemsTotal) }}</td>
     </tr>
 
     @if ($order->discount_percentage > 0)
         <tr>
             <td>Discount ({{ (int) $order->discount_percentage }}%)</td>
-            <td>-{{ number_format($discountAmount, 2) }}</td>
+            <td>-{{ number_format($discountAmount) }}</td>
         </tr>
     @elseif ($order->manual_discount > 0)
         <tr>
             <td>Discount (Manual)</td>
-            <td>-{{ number_format($discountAmount, 2) }}</td>
+            <td>-{{ number_format($discountAmount) }}</td>
         </tr>
     @endif
 
     @if ($order->service_charges > 0)
         <tr>
             <td>Service Charges (7%)</td>
-            <td>{{ number_format($order->service_charges, 2) }}</td>
+            <td>{{ number_format($order->service_charges) }}</td>
         </tr>
     @endif
 
     @if ($order->delivery_charges > 0)
         <tr>
             <td>Delivery Charges</td>
-            <td>{{ number_format($order->delivery_charges, 2) }}</td>
+            <td>{{ number_format($order->delivery_charges) }}</td>
         </tr>
     @endif
 
+    @if ($order->gst_tax > 0)
+        <tr>
+            <td>GST Tax</td>
+            <td>{{ number_format($order->gst_tax) }}</td>
+        </tr>
+    @endif
     <tr>
         <td colspan="2" style="border-top: 1px dotted #000;"></td>
     </tr>

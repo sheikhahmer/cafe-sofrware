@@ -34,7 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->profile()
-            ->brandLogo(new HtmlString('<img src="' . asset('assets/images/logo.png') . '" class="brand-logo" />'))//            ->brandLogoHeight('auto')
+//            ->brandLogo(new HtmlString('<img src="' . asset('assets/images/logo.png') . '" class="brand-logo" />'))//            ->brandLogoHeight('auto')
 
             ->colors([
                 'primary' => Color::Amber,

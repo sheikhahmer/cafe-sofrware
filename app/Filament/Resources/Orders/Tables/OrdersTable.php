@@ -19,7 +19,16 @@ class OrdersTable
         return $table
             ->columns([
                 TextColumn::make('id')->label('Order No')->sortable(),
-                TextColumn::make('customer_name')->label('Customer')->searchable(),
+                TextColumn::make('customer_name')
+                    ->label('Customer')
+                    ->searchable()
+                    ->getStateUsing(fn($record) => $record->customer_name ?: '—'),
+
+                TextColumn::make('gst_tax')
+                    ->label('GST TAX')
+                    ->searchable()
+                    ->getStateUsing(fn($record) => $record->gst_tax ?: '—'),
+
 
                 TextColumn::make('order_type')
                     ->label('Type')
@@ -71,7 +80,6 @@ class OrdersTable
                     ->color(fn ($record) =>
                     $record->items()->where('kitchen_printed', false)->exists() ? 'warning' : 'success'
                     )
-                    ->requiresConfirmation()
                     ->action(function ($record, $livewire) {
                         // Get only unprinted items
                         $unprintedItems = $record->items()->where('kitchen_printed', false)->get();
@@ -107,7 +115,6 @@ class OrdersTable
                     ->label('Print Only')
                     ->icon('heroicon-o-printer')
                     ->color('info')
-                    ->requiresConfirmation()
                     ->action(function ($record, $livewire) {
                         // Mark items as receipt printed
                         $record->items()->update(['receipt_printed' => true]);
@@ -133,7 +140,6 @@ class OrdersTable
                     ->label('Paid Print')
                     ->icon('heroicon-o-currency-dollar')
                     ->color('success')
-                    ->requiresConfirmation()
                     ->action(function ($record, $livewire) {
                         $record->update(['status' => 'paid']);
                         $livewire->dispatch('$refresh');

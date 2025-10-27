@@ -24,6 +24,7 @@ class Order extends Model
         'delivery_charges',
         'status',
         'rider_id',
+        'gst_tax',
     ];
 
     public function items()

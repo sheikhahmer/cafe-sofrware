@@ -20,9 +20,9 @@ class OrderForm
         return $schema->components([
             Section::make('Add Order Details')
                 ->schema([
-                    TextInput::make('customer_name')->label('Customer Name'),
-                    TextInput::make('contact')->label('Contact'),
-                    Textarea::make('address')->label('Address'),
+                    TextInput::make('customer_name')->label('Customer Name')->disabled(fn(Get $get) => $get('id') !== null),
+                    TextInput::make('contact')->label('Contact')->disabled(fn(Get $get) => $get('id') !== null),
+                    Textarea::make('address')->label('Address')->disabled(fn(Get $get) => $get('id') !== null),
 
                     // 🧾 Order Details
                     Select::make('order_type')
@@ -33,6 +33,7 @@ class OrderForm
                         ])
                         ->required()
                         ->reactive()
+                        ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(function ($state, Get $get, Set $set) {
                             // Reset or recalc when order type changes
                             if ($state === 'dine_in') {
@@ -50,15 +51,18 @@ class OrderForm
                     Select::make('table_id')
                         ->relationship('table', 'no')
                         ->label('Table')
+                        ->disabled(fn(Get $get) => $get('id') !== null)
                         ->visible(fn(Get $get) => $get('order_type') === 'dine_in'),
 
                     Select::make('waiter_id')
                         ->relationship('waiter', 'name')
                         ->label('Waiter')
+                        ->disabled(fn(Get $get) => $get('id') !== null)
                         ->visible(fn(Get $get) => $get('order_type') === 'dine_in'),
 
                     Select::make('rider_id')
                         ->label('Rider')
+                        ->disabled(fn(Get $get) => $get('id') !== null)
                         ->options(\App\Models\Rider::pluck('name', 'id'))
                         ->searchable()
                         ->visible(fn(Get $get) => $get('order_type') === 'delivery')
@@ -106,6 +110,7 @@ class OrderForm
                         ->numeric()
                         ->disabled()
                         ->dehydrated()
+                        ->disabled(fn(Get $get) => $get('id') !== null)
                         ->reactive(),
 
                     // 👇 Delivery charges (only visible for delivery)
@@ -113,24 +118,49 @@ class OrderForm
                         ->numeric()
                         ->visible(fn(Get $get) => $get('order_type') === 'delivery')
                         ->reactive()
+                        ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
+                    // Discounts and Total
                     // Discounts and Total
                     TextInput::make('discount_percentage')
                         ->numeric()
                         ->label('Discount Percentage %')
                         ->reactive()
                         ->debounce(1000)
-                        ->disabled(fn($get) => $get('manual_discount') !== null)  // Disable if manual discount is set
-                        ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
+                        // Disable on edit page
+                        ->disabled(fn(Get $get) => $get('id') !== null)
+                        ->afterStateUpdated(function($state, Get $get, Set $set) {
+                            // Disable manual discount if discount percentage is filled
+                            if ($state) {
+                                $set('manual_discount', null);  // Clear manual discount
+                            }
+                            static::updateGrandTotal($get, $set);
+                        }),
 
                     TextInput::make('manual_discount')
                         ->numeric()
                         ->reactive()
                         ->debounce(1000)
-                        ->disabled(fn($get) => $get('discount_percentage') !== null)  // Disable if percentage discount is set
-                        ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
+                        // Disable on edit page
+                        ->disabled(fn(Get $get) => $get('id') !== null)
+                        // Disable if discount percentage is set during create
+                        ->afterStateUpdated(function($state, Get $get, Set $set) {
+                            // Disable discount percentage if manual discount is filled
+                            if ($state) {
+                                $set('discount_percentage', null);  // Clear discount percentage
+                            }
+                            static::updateGrandTotal($get, $set);
+                        }),
 
+
+
+                    TextInput::make('GST Tax')
+                        ->numeric()
+                        ->reactive()
+                        ->debounce(1000)
+                        ->disabled(fn(Get $get) => $get('id') !== null)
+                        ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
                     TextInput::make('grand_total')
                         ->numeric()
@@ -167,8 +197,10 @@ class OrderForm
         $discountAmount = ($itemsTotal * $discountPercent) / 100;
         $subtotalAfterDiscounts = $subtotalBeforeDiscounts - $discountAmount - $manualDiscount;
 
+        $gst = (float)($get('GST Tax') ?? 0);
+
         // ✅ Step 4: Calculate final grand total
-        $grandTotal = $subtotalAfterDiscounts + $serviceCharge + ($orderType === 'delivery' ? $delivery : 0);
+        $grandTotal = $subtotalAfterDiscounts + $serviceCharge + ($orderType === 'delivery' ? $delivery : 0) + $gst;
 
         $set('grand_total', $grandTotal);
     }

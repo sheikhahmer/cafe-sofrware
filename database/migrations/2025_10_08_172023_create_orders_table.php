@@ -26,6 +26,7 @@ return new class extends Migration
             $table->decimal('delivery_charges', 10, 2)->nullable();
             $table->string('status')->default('pending');
             $table->foreignId('rider_id')->nullable();
+            $table->integer('gst_tax')->nullable();
             $table->timestamps();
         });
     }

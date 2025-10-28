@@ -51,7 +51,6 @@ class OrderForm
                     Select::make('table_id')
                         ->relationship('table', 'no')
                         ->label('Table')
-                        ->disabled(fn(Get $get) => $get('id') !== null)
                         ->visible(fn(Get $get) => $get('order_type') === 'dine_in'),
 
                     Select::make('waiter_id')

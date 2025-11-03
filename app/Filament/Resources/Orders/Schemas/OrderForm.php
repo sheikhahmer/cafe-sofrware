@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Models\Product;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -18,11 +19,14 @@ class OrderForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
+            Placeholder::make('enter-navigation-script')
+                ->content(view('component.enter-navigation-js'))
+                ->hiddenLabel(),
             Section::make('Add Order Details')
                 ->schema([
                     TextInput::make('customer_name')->label('Customer Name')->disabled(fn(Get $get) => $get('id') !== null),
                     TextInput::make('contact')->label('Contact')->disabled(fn(Get $get) => $get('id') !== null),
-                    Textarea::make('address')->label('Address')->disabled(fn(Get $get) => $get('id') !== null),
+                    TextInput::make('address')->label('Address')->disabled(fn(Get $get) => $get('id') !== null),
 
                     // 🧾 Order Details
                     Select::make('order_type')
@@ -31,8 +35,10 @@ class OrderForm
                             'takeaway' => 'Takeaway',
                             'delivery' => 'Delivery',
                         ])
+                        ->default('dine_in')
                         ->required()
-                        ->reactive()
+                        ->live()
+
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(function ($state, Get $get, Set $set) {
                             // Reset or recalc when order type changes
@@ -51,11 +57,13 @@ class OrderForm
                     Select::make('table_id')
                         ->relationship('table', 'no')
                         ->label('Table')
+
                         ->visible(fn(Get $get) => $get('order_type') === 'dine_in'),
 
                     Select::make('waiter_id')
                         ->relationship('waiter', 'name')
                         ->label('Waiter')
+
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->visible(fn(Get $get) => $get('order_type') === 'dine_in'),
 
@@ -64,6 +72,7 @@ class OrderForm
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->options(\App\Models\Rider::pluck('name', 'id'))
                         ->searchable()
+
                         ->visible(fn(Get $get) => $get('order_type') === 'delivery')
                         ->required(fn(Get $get) => $get('order_type') === 'delivery'),
 
@@ -74,8 +83,9 @@ class OrderForm
                             Select::make('product_id')
                                 ->label('Product')
                                 ->options(Product::pluck('name', 'id','description'))
-                                ->reactive()
+                                ->live()
                                 ->searchable()
+                                ->columnSpan(6)
                                 ->afterStateUpdated(function ($state, Set $set) {
                                     $product = Product::find($state);
                                     $set('price', $product?->price ?? 0);
@@ -84,39 +94,45 @@ class OrderForm
 
                             TextInput::make('quantity')
                                 ->numeric()
-                                ->reactive()
-                                ->debounce(1000)
+                                ->live()
+                                ->default('dine_in')
+//                                ->debounce(1000)
+                                ->columnSpan(1)
                                 ->afterStateUpdated(function ($state, Get $get, Set $set) {
                                     $set('total', ($get('price') ?? 0) * ($state ?? 0));
                                     static::updateGrandTotal($get, $set);
                                 })
                                 ->required(),
 
-                            TextInput::make('price')->numeric()->required()->disabled()->dehydrated(),
-                            TextInput::make('total')
+                            TextInput::make('price')
                                 ->numeric()
+                                ->required()
                                 ->disabled()
-                                ->dehydrated(),
+                                ->dehydrated()
+                                ->columnSpan(1),
+//                            TextInput::make('total')
+//                                ->numeric()
+//                                ->readOnly()
+//                                ->dehydrated(),
                         ])
-                        ->columns(4)
+                        ->columns(8)
                         ->columnSpanFull()
                         ->createItemButtonLabel('Add Item')
-                        ->reactive()
+                        ->live()
                         ->afterStateUpdated(fn(Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
                     // 💰 Auto-calculated 7% service charge for dine-in
                     TextInput::make('service_charges')
                         ->numeric()
-                        ->disabled()
-                        ->dehydrated()
-                        ->disabled(fn(Get $get) => $get('id') !== null)
-                        ->reactive(),
+                        ->disabled()->dehydrated()
+                        ->live(),
 
                     // 👇 Delivery charges (only visible for delivery)
                     TextInput::make('delivery_charges')
                         ->numeric()
+
                         ->visible(fn(Get $get) => $get('order_type') === 'delivery')
-                        ->reactive()
+                        ->live()
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
@@ -124,8 +140,9 @@ class OrderForm
                     // Discounts and Total
                     TextInput::make('discount_percentage')
                         ->numeric()
+
                         ->label('Discount Percentage %')
-                        ->reactive()
+                        ->live()
                         ->debounce(1000)
                         // Disable on edit page
                         ->disabled(fn(Get $get) => $get('id') !== null)
@@ -139,7 +156,8 @@ class OrderForm
 
                     TextInput::make('manual_discount')
                         ->numeric()
-                        ->reactive()
+                        ->live()
+
                         ->debounce(1000)
                         // Disable on edit page
                         ->disabled(fn(Get $get) => $get('id') !== null)
@@ -156,7 +174,7 @@ class OrderForm
 
                     TextInput::make('GST Tax')
                         ->numeric()
-                        ->reactive()
+                        ->live()
                         ->debounce(1000)
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
@@ -164,6 +182,7 @@ class OrderForm
                     TextInput::make('grand_total')
                         ->numeric()
                         ->disabled()
+
                         ->dehydrated(),
                 ])
                 ->columnSpanFull()
@@ -174,34 +193,49 @@ class OrderForm
     // 🧮 Central total calculation
     protected static function updateGrandTotal(Get $get, Set $set): void
     {
-        $itemsTotal = collect($get('items') ?? [])
-            ->sum(fn($item) => ((float)($item['price'] ?? 0)) * ((float)($item['quantity'] ?? 0)));
+        // --- Collect all items safely ---
+        $items = collect($get('items') ?? []);
 
-        $discountPercent = $get('discount_percentage') ?? 0;
-        $manualDiscount = $get('manual_discount') ?? 0;
-        $delivery = $get('delivery_charges') ?? 0;
-        $orderType = $get('order_type');
+        // --- Step 1: Base subtotal ---
+        $itemsTotal = $items->sum(function ($item) {
+            $price = (float) ($item['price'] ?? 0);
+            $qty   = (float) ($item['quantity'] ?? 0);
+            return $price * $qty;
+        });
 
-        // 🧾 Step 1: Base subtotal (no discounts yet)
-        $subtotalBeforeDiscounts = $itemsTotal;
+        // --- Step 2: Extract form values ---
+        $discountPercent = (float) ($get('discount_percentage') ?? 0);
+        $manualDiscount  = (float) ($get('manual_discount') ?? 0);
+        $delivery        = (float) ($get('delivery_charges') ?? 0);
+        $gst             = (float) ($get('GST Tax') ?? 0);
+        $orderType       = $get('order_type');
 
-        // ✅ Step 2: Service charge — based on full subtotal, before any discounts
-        $serviceCharge = 0;
-        if ($orderType === 'dine_in') {
-            $serviceCharge = round($subtotalBeforeDiscounts * 0.07, 2);
-        }
+        // --- Step 3: Service charge (7% only for dine-in) ---
+        $serviceCharge = $orderType === 'dine_in'
+            ? round($itemsTotal * 0.07, 2)
+            : 0;
+
+        // Update service charge in UI
         $set('service_charges', $serviceCharge);
 
-        // 🧮 Step 3: Apply both discounts AFTER service charge is determined
-        $discountAmount = ($itemsTotal * $discountPercent) / 100;
-        $subtotalAfterDiscounts = $subtotalBeforeDiscounts - $discountAmount - $manualDiscount;
+        // --- Step 4: Discounts ---
+        $discountFromPercentage = ($itemsTotal * $discountPercent) / 100;
+        $subtotalAfterDiscounts = $itemsTotal - $discountFromPercentage - $manualDiscount;
 
-        $gst = (float)($get('GST Tax') ?? 0);
+        if ($subtotalAfterDiscounts < 0) {
+            $subtotalAfterDiscounts = 0; // prevent negative totals
+        }
 
-        // ✅ Step 4: Calculate final grand total
-        $grandTotal = $subtotalAfterDiscounts + $serviceCharge + ($orderType === 'delivery' ? $delivery : 0) + $gst;
+        // --- Step 5: Apply other charges ---
+        $grandTotal = $subtotalAfterDiscounts + $serviceCharge + $gst;
 
-        $set('grand_total', $grandTotal);
+        if ($orderType === 'delivery') {
+            $grandTotal += $delivery;
+        }
+
+        // --- Step 6: Final formatting ---
+        $set('grand_total', round($grandTotal, 2));
     }
+
 
 }

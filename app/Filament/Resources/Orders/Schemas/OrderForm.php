@@ -22,6 +22,11 @@ class OrderForm
             Placeholder::make('enter-navigation-script')
                 ->content(view('component.enter-navigation-js'))
                 ->hiddenLabel(),
+
+            Placeholder::make('add-item-shortcut-script')
+                ->content(view('component.add-item-shortcut-js'))
+                ->hiddenLabel(),
+
             Section::make('Add Order Details')
                 ->schema([
                     TextInput::make('customer_name')->label('Customer Name')->disabled(fn(Get $get) => $get('id') !== null),
@@ -130,13 +135,11 @@ class OrderForm
                     // 👇 Delivery charges (only visible for delivery)
                     TextInput::make('delivery_charges')
                         ->numeric()
-
                         ->visible(fn(Get $get) => $get('order_type') === 'delivery')
                         ->live()
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
-                    // Discounts and Total
                     // Discounts and Total
                     TextInput::make('discount_percentage')
                         ->numeric()
@@ -149,16 +152,15 @@ class OrderForm
                         ->afterStateUpdated(function($state, Get $get, Set $set) {
                             // Disable manual discount if discount percentage is filled
                             if ($state) {
-                                $set('manual_discount', null);  // Clear manual discount
+                                $set('discount', null);  // Clear manual discount
                             }
                             static::updateGrandTotal($get, $set);
                         }),
 
-                    TextInput::make('manual_discount')
+                    TextInput::make('discount')
                         ->numeric()
                         ->live()
-
-                        ->debounce(1000)
+                        ->debounce(300)
                         // Disable on edit page
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         // Disable if discount percentage is set during create
@@ -205,7 +207,7 @@ class OrderForm
 
         // --- Step 2: Extract form values ---
         $discountPercent = (float) ($get('discount_percentage') ?? 0);
-        $manualDiscount  = (float) ($get('manual_discount') ?? 0);
+        $manualDiscount  = (float) ($get('discount') ?? 0);
         $delivery        = (float) ($get('delivery_charges') ?? 0);
         $gst             = (float) ($get('GST Tax') ?? 0);
         $orderType       = $get('order_type');

@@ -16,6 +16,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // 🔹 Define all permissions for your modules
         $modules = [
             'orders',
+            'order items',
             'categories',
             'products',
             'expenses',
@@ -45,6 +46,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // 🔹 Assign permissions for creating orders and expenses to User
         $userPermissions = Permission::whereIn('name', [
             'create orders',
+            'create order items',
             'create expenses',
         ])->get();
 

@@ -138,37 +138,6 @@ class OrderForm
                         ->createItemButtonLabel('Add Item')
                         ->afterStateUpdated(fn(Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
-                    TextInput::make('service_charges')
-                        ->numeric()
-                        ->hidden()      // hide the input visually (optional)
-                        ->dehydrated()  // ensure it will be saved, updateGrandTotal() sets it
-                        ->reactive(),
-
-                    TextInput::make('grand_total')
-                        ->numeric()
-                        ->hidden()
-                        ->dehydrated()
-                        ->reactive(),
-
-                    // 💰 Auto-calculated 7% service charge for dine-in
-                    Placeholder::make('service_charges_display')
-                        ->label('Service Charges')
-                        ->content(function (Get $get) {
-                            $items = collect($get('items') ?? []);
-                            $itemsTotal = $items->sum(function ($item) {
-                                $price = (float) ($item['price'] ?? 0);
-                                $qty   = (float) ($item['quantity'] ?? 0);
-                                return $price * $qty;
-                            });
-
-                            $serviceCharge = $get('order_type') === 'dine_in'
-                                ? round($itemsTotal * 0.07, 2)
-                                : 0;
-
-                            return number_format($serviceCharge, 2);
-                        })
-                        ->reactive(),
-
                     // 👇 Delivery charges (only visible for delivery)
                     TextInput::make('delivery_charges')
                         ->numeric()
@@ -215,6 +184,37 @@ class OrderForm
                         ->debounce(1000)
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
+
+                    TextInput::make('service_charges')
+                        ->numeric()
+                        ->hidden()      // hide the input visually (optional)
+                        ->dehydrated()  // ensure it will be saved, updateGrandTotal() sets it
+                        ->reactive(),
+
+                    TextInput::make('grand_total')
+                        ->numeric()
+                        ->hidden()
+                        ->dehydrated()
+                        ->reactive(),
+
+                    // 💰 Auto-calculated 7% service charge for dine-in
+                    Placeholder::make('service_charges_display')
+                        ->label('Service Charges')
+                        ->content(function (Get $get) {
+                            $items = collect($get('items') ?? []);
+                            $itemsTotal = $items->sum(function ($item) {
+                                $price = (float) ($item['price'] ?? 0);
+                                $qty   = (float) ($item['quantity'] ?? 0);
+                                return $price * $qty;
+                            });
+
+                            $serviceCharge = $get('order_type') === 'dine_in'
+                                ? round($itemsTotal * 0.07, 2)
+                                : 0;
+
+                            return number_format($serviceCharge, 2);
+                        })
+                        ->reactive(),
 
                     Placeholder::make('grand_total_display')
                         ->label('Grand Total')

@@ -90,14 +90,11 @@
     <p>-- Send to Kitchen --</p>
 </div>
 
-<p class="center gap-3 font-semibold">
-    <x-lucide-facebook style="width: 14px; height: 14px;" class="text-primary-500 inline-block align-middle" />
-    <x-lucide-instagram style="width: 14px; height: 14px;" class="text-primary-500 inline-block align-middle" />
-    <x-lucide-twitter style="width: 14px; height: 14px;" class="text-primary-500 inline-block align-middle" />
-    <span class="ml-2">@ Masoom's Cafe</span>
-</p>
-
-<p class="center">THANKS FOR CHOOSING MASOOM'S CAFE!</p>
-<p class="center">Software Powered By: 03356360207</p>
+{{--<p class="center gap-3 font-semibold">--}}
+{{--    <x-lucide-facebook style="width: 14px; height: 14px;" class="text-primary-500 inline-block align-middle" />--}}
+{{--    <x-lucide-instagram style="width: 14px; height: 14px;" class="text-primary-500 inline-block align-middle" />--}}
+{{--    <x-lucide-twitter style="width: 14px; height: 14px;" class="text-primary-500 inline-block align-middle" />--}}
+{{--    <span class="ml-2">@ Masoom's Cafe</span>--}}
+{{--</p>--}}
 </body>
 </html>

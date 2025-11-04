@@ -136,22 +136,37 @@ class OrdersTable
                     ),
 
                 // 💵 Paid Print — marks order as paid
-                Action::make('paid_print')
-                    ->label('Paid Print')
+                Action::make('mark_paid')
+                    ->label('Mark as Paid')
                     ->icon('heroicon-o-currency-dollar')
                     ->color('success')
                     ->action(function ($record, $livewire) {
                         $record->update(['status' => 'paid']);
-                        $livewire->dispatch('$refresh');
-                        $url = route('orders.print.paid', $record);
-                        $livewire->js("window.open('{$url}', '_blank');");
+                        $livewire->dispatch('$refresh'); // refresh table or form
                     })
                     ->disabled(fn ($record) => $record->status === 'paid')
                     ->tooltip(fn ($record) =>
-                    $record->where('status' ,'pending')->exists()
-                        ? 'Click to print'
-                        : 'Already printed'
+                    $record->status === 'paid'
+                        ? 'Already marked as paid'
+                        : 'Mark this order as paid'
                     ),
+
+//                Action::make('paid_print')
+//                    ->label('Paid Print')
+//                    ->icon('heroicon-o-currency-dollar')
+//                    ->color('success')
+//                    ->action(function ($record, $livewire) {
+//                        $record->update(['status' => 'paid']);
+//                        $livewire->dispatch('$refresh');
+//                        $url = route('orders.print.paid', $record);
+//                        $livewire->js("window.open('{$url}', '_blank');");
+//                    })
+//                    ->disabled(fn ($record) => $record->status === 'paid')
+//                    ->tooltip(fn ($record) =>
+//                    $record->where('status' ,'pending')->exists()
+//                        ? 'Click to print'
+//                        : 'Already printed'
+//                    ),
 
                 Action::make('addItem')
                     ->label('Add Item')

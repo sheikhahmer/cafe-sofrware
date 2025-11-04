@@ -13,6 +13,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Support\Str;
 
 class OrderForm
 {
@@ -28,6 +29,7 @@ class OrderForm
                 ->hiddenLabel(),
 
             Section::make('Add Order Details')
+                ->reactive()
                 ->schema([
                     TextInput::make('customer_name')->label('Customer Name')->disabled(fn(Get $get) => $get('id') !== null),
                     TextInput::make('contact')->label('Contact')->disabled(fn(Get $get) => $get('id') !== null),
@@ -60,6 +62,7 @@ class OrderForm
                         }),
 
                     Select::make('table_id')
+                        ->disabled(fn(Get $get) => $get('id') !== null)
                         ->relationship('table', 'no')
                         ->label('Table')
 
@@ -83,54 +86,88 @@ class OrderForm
 
                     // 🧾 Order Items
                     Repeater::make('items')
-                        ->relationship()
+                        ->relationship('items')
                         ->schema([
                             Select::make('product_id')
                                 ->label('Product')
-                                ->options(Product::pluck('name', 'id','description'))
+                                ->options(Product::pluck('name', 'id')->toArray())
                                 ->live()
-                                ->searchable()
                                 ->columnSpan(6)
-                                ->afterStateUpdated(function ($state, Set $set) {
-                                    $product = Product::find($state);
-                                    $set('price', $product?->price ?? 0);
+                                ->searchable()
+                                ->afterStateUpdated(function ($state, Get $get, Set $set) {
+                                    $product = \App\Models\Product::find($state);
+                                    $price = $product?->price ?? 0;
+                                    $set('price', $price);
+                                    $set('quantity', 1);
+                                    $set('total', $price);
+                                    static::updateGrandTotal($get, $set);
                                 })
                                 ->required(),
 
                             TextInput::make('quantity')
                                 ->numeric()
-                                ->live()
-                                ->default('dine_in')
-//                                ->debounce(1000)
+                                ->live(onBlur: false)
+                                ->default(1)
                                 ->columnSpan(1)
                                 ->afterStateUpdated(function ($state, Get $get, Set $set) {
-                                    $set('total', ($get('price') ?? 0) * ($state ?? 0));
+                                    $price = (float) ($get('price') ?? 0);
+                                    $qty   = (float) ($state ?? 0);
+                                    $set('total', $price * $qty);
                                     static::updateGrandTotal($get, $set);
                                 })
                                 ->required(),
 
                             TextInput::make('price')
                                 ->numeric()
-                                ->required()
-                                ->disabled()
+                                ->disabled()      // keep disabled if you don’t want edits
                                 ->dehydrated()
-                                ->columnSpan(1),
-//                            TextInput::make('total')
-//                                ->numeric()
-//                                ->readOnly()
-//                                ->dehydrated(),
+                                ->columnSpan(1)
+                                ->required(),
+
+                            TextInput::make('total')
+                                ->numeric()
+                                ->readOnly()
+                                ->dehydrated()
+                                ->hidden()
+                                ->required(),
                         ])
+                        ->reactive()
+                        ->live(onBlur: false)
                         ->columns(8)
                         ->columnSpanFull()
                         ->createItemButtonLabel('Add Item')
-                        ->live()
                         ->afterStateUpdated(fn(Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
-                    // 💰 Auto-calculated 7% service charge for dine-in
                     TextInput::make('service_charges')
                         ->numeric()
-                        ->disabled()->dehydrated()
-                        ->live(),
+                        ->hidden()      // hide the input visually (optional)
+                        ->dehydrated()  // ensure it will be saved, updateGrandTotal() sets it
+                        ->reactive(),
+
+                    TextInput::make('grand_total')
+                        ->numeric()
+                        ->hidden()
+                        ->dehydrated()
+                        ->reactive(),
+
+                    // 💰 Auto-calculated 7% service charge for dine-in
+                    Placeholder::make('service_charges_display')
+                        ->label('Service Charges')
+                        ->content(function (Get $get) {
+                            $items = collect($get('items') ?? []);
+                            $itemsTotal = $items->sum(function ($item) {
+                                $price = (float) ($item['price'] ?? 0);
+                                $qty   = (float) ($item['quantity'] ?? 0);
+                                return $price * $qty;
+                            });
+
+                            $serviceCharge = $get('order_type') === 'dine_in'
+                                ? round($itemsTotal * 0.07, 2)
+                                : 0;
+
+                            return number_format($serviceCharge, 2);
+                        })
+                        ->reactive(),
 
                     // 👇 Delivery charges (only visible for delivery)
                     TextInput::make('delivery_charges')
@@ -172,8 +209,6 @@ class OrderForm
                             static::updateGrandTotal($get, $set);
                         }),
 
-
-
                     TextInput::make('GST Tax')
                         ->numeric()
                         ->live()
@@ -181,11 +216,37 @@ class OrderForm
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
-                    TextInput::make('grand_total')
-                        ->numeric()
-                        ->disabled()
+                    Placeholder::make('grand_total_display')
+                        ->label('Grand Total')
+                        ->content(function (Get $get) {
+                            $items = collect($get('items') ?? []);
+                            $itemsTotal = $items->sum(function ($item) {
+                                $price = (float) ($item['price'] ?? 0);
+                                $qty   = (float) ($item['quantity'] ?? 0);
+                                return $price * $qty;
+                            });
 
-                        ->dehydrated(),
+                            $discountPercent = (float) ($get('discount_percentage') ?? 0);
+                            $manualDiscount  = (float) ($get('discount') ?? 0);
+                            $gst             = (float) ($get('GST Tax') ?? 0);
+                            $delivery        = (float) ($get('delivery_charges') ?? 0);
+                            $orderType       = $get('order_type');
+
+                            $serviceCharge = $orderType === 'dine_in' ? round($itemsTotal * 0.07, 2) : 0;
+                            $discountFromPercentage = ($itemsTotal * $discountPercent) / 100;
+                            $subtotalAfterDiscounts = $itemsTotal - $discountFromPercentage - $manualDiscount;
+                            if ($subtotalAfterDiscounts < 0) {
+                                $subtotalAfterDiscounts = 0;
+                            }
+
+                            $grandTotal = $subtotalAfterDiscounts + $serviceCharge + $gst;
+                            if ($orderType === 'delivery') {
+                                $grandTotal += $delivery;
+                            }
+
+                            return number_format(round($grandTotal, 2), 2);
+                        })
+                        ->reactive(),
                 ])
                 ->columnSpanFull()
                 ->columns(2)

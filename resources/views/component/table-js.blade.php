@@ -1,68 +1,96 @@
 <script>
     (function () {
-        function handleKitchenPrintShortcut(event) {
-            // ALT + K
+        // Function to handle the shortcuts
+        function handleShortcuts(event) {
+            // ALT + K for Kitchen Print
             if (event.altKey && event.key.toLowerCase() === 'k') {
                 event.preventDefault();
                 event.stopPropagation();
-
-                const kitchenPrintButton = findEnabledKitchenPrintButton();
-
+                const kitchenPrintButton = findEnabledButton('kitchenPrint');
                 if (kitchenPrintButton) {
                     kitchenPrintButton.click();
                 } else {
                     console.warn('No available Kitchen Print button found.');
                 }
             }
-        }
 
-        function findEnabledKitchenPrintButton() {
-            // Look for enabled Kitchen Print buttons in the Filament table
-            // Filament v4 uses data attributes for action buttons
-            const selectors = [
-                'button[data-action="kitchenPrint"]:not([disabled])',
-                '[wire\\:click*="kitchenPrint"]:not([disabled])',
-                'button:contains("Kitchen Print"):not([disabled])',
-            ];
-
-            for (const selector of selectors) {
-                if (selector.includes('contains')) {
-                    // Fallback for browsers that don't support :contains
-                    const allButtons = document.querySelectorAll('button');
-                    for (const btn of allButtons) {
-                        if (btn.textContent.trim().includes('Kitchen Print') && !btn.disabled) {
-                            return btn;
-                        }
-                    }
+            // ALT + T for Print Only
+            if (event.altKey && event.key.toLowerCase() === 't') {
+                event.preventDefault();
+                event.stopPropagation();
+                const printOnlyButton = findEnabledButton('print_only');
+                if (printOnlyButton) {
+                    printOnlyButton.click();
                 } else {
-                    const btn = document.querySelector(selector);
-                    if (btn) return btn;
+                    console.warn('No available Print Only button found.');
                 }
             }
 
-            // Fallback — look for any button labeled "Kitchen Print" that isn’t disabled
+            // ALT + P for Mark as Paid
+            if (event.altKey && event.key.toLowerCase() === 'p') {
+                event.preventDefault();
+                event.stopPropagation();
+                const markPaidButton = findEnabledButton('mark_paid');
+                if (markPaidButton) {
+                    markPaidButton.click();
+                } else {
+                    console.warn('No available Mark as Paid button found.');
+                }
+            }
+
+            if (event.altKey && event.key.toLowerCase() === 'n') {
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Find the New Order button by its classes
+                const newOrderButton = document.querySelector('.fi-ac-btn-action.fi-btn.fi-size-md:not([disabled])');
+
+                if (newOrderButton) {
+                    newOrderButton.click();  // Simulate click on the New Order button
+                } else {
+                    console.warn('New Order button not found.');
+                }
+            }
+        }
+
+        // Helper function to find enabled action buttons
+        function findEnabledButton(action) {
+            // Look for enabled action buttons in the Filament table
+            const selectors = [
+                `button[data-action="${action}"]:not([disabled])`,
+                `[wire\\:click*="${action}"]:not([disabled])`,
+                `button:contains("${action.replace('_', ' ')}"):not([disabled])`,
+            ];
+
+            for (const selector of selectors) {
+                const btn = document.querySelector(selector);
+                if (btn) return btn;
+            }
+
+            // Fallback: Find any button with the correct label and is not disabled
             const fallback = [...document.querySelectorAll('button')]
-                .find(b => b.textContent.includes('Kitchen Print') && !b.disabled);
+                .find(b => b.textContent.trim().toLowerCase().includes(action.replace('_', ' ').toLowerCase()) && !b.disabled);
             return fallback || null;
         }
 
-        function initializeKitchenPrintShortcut() {
-            document.removeEventListener('keydown', handleKitchenPrintShortcut);
-            document.addEventListener('keydown', handleKitchenPrintShortcut);
+        // Initialize the shortcut listener
+        function initializeShortcuts() {
+            document.removeEventListener('keydown', handleShortcuts);
+            document.addEventListener('keydown', handleShortcuts);
         }
 
-        // Initialize when DOM ready
+        // Initialize when DOM is ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeKitchenPrintShortcut);
+            document.addEventListener('DOMContentLoaded', initializeShortcuts);
         } else {
-            initializeKitchenPrintShortcut();
+            initializeShortcuts();
         }
 
         // Re-init for Livewire updates
         if (typeof Livewire !== 'undefined') {
-            document.addEventListener('livewire:load', initializeKitchenPrintShortcut);
+            document.addEventListener('livewire:load', initializeShortcuts);
             document.addEventListener('livewire:update', () => {
-                setTimeout(initializeKitchenPrintShortcut, 100);
+                setTimeout(initializeShortcuts, 100);
             });
         }
 

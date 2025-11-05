@@ -11,19 +11,17 @@ class RolesTable
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Role')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('permissions_count')
-                    ->label('Permissions')
-                    ->counts('permissions')
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Role')
+                    ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('permissions.name')
+                    ->label('Permissions')
+                    ->badge()
+                    ->separator(',')
+                    ->limitList(10)
+                    ->searchable(),
             ])
             ->filters([]);
-//            ->actions([
-//                Tables\Actions\EditAction::make(),
-//                Tables\Actions\DeleteAction::make(),
-//            ])
-//            ->bulkActions([
-//                Tables\Actions\DeleteBulkAction::make(),
-//            ]);
     }
 }

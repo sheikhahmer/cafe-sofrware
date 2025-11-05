@@ -92,7 +92,7 @@ class OrderForm
                                 ->label('Product')
                                 ->options(Product::pluck('name', 'id')->toArray())
                                 ->live()
-                                ->columnSpan(6)
+                                ->columnSpan(5)
                                 ->searchable()
                                 ->afterStateUpdated(function ($state, Get $get, Set $set) {
                                     $product = \App\Models\Product::find($state);
@@ -128,7 +128,7 @@ class OrderForm
                                 ->numeric()
                                 ->readOnly()
                                 ->dehydrated()
-                                ->hidden()
+                                ->columnSpan(1)
                                 ->required(),
                         ])
                         ->reactive()

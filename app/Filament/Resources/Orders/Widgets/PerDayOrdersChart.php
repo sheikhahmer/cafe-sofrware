@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Orders\Widgets;
 
 use App\Models\Order;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PerDayOrdersChart extends ChartWidget
@@ -58,6 +59,10 @@ class PerDayOrdersChart extends ChartWidget
     protected function getType(): string
     {
         return 'bar';
+    }
+    public static function canView(): bool
+    {
+        return Auth::user()->hasRole('Admin');
     }
 
     //    public function getColumnSpan(): int|string|array

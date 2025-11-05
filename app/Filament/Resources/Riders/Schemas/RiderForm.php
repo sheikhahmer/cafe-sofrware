@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Riders\Schemas;
 
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -12,6 +13,9 @@ class RiderForm
     {
         return $schema
             ->components([
+                Placeholder::make('enter-navigation-script')
+                    ->content(view('component.enter-navigation-js'))
+                    ->hiddenLabel(),
                 Section::make('Add Rider Details')->schema([
                     TextInput::make('name')
                         ->default(null),

@@ -8,7 +8,9 @@
 /*    @apply  bg-white p-10 rounded-2xl m-3;*/
 /*}*/
 
-
+.fi-sidebar-nav {
+    @apply bg-white dark:bg-black;
+}
 
 .fi-page-header-main-ctn{
     @apply bg-white dark:bg-black p-8;

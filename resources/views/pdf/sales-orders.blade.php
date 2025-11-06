@@ -150,8 +150,8 @@
                 </tbody>
                 <tfoot>
                 <tr>
-                    <td colspan="3" style="text-align:right;">Subtotal ({{ $typeLabels[$type] ?? ucfirst($type) }}):</td>
-                    <td colspan="2">{{ number_format($subtotal, 2) }}</td>
+                    <td colspan="4" style="text-align:right;">Subtotal ({{ $typeLabels[$type] ?? ucfirst($type) }}):</td>
+                    <td colspan="4">{{ number_format($subtotal, 2) }}</td>
                 </tr>
                 </tfoot>
             </table>

@@ -2,7 +2,7 @@
     (function() {
         function handleAddItemShortcut(event) {
             // Check if Ctrl+I is pressed
-            if (event.ctrlKey && event.key === 'i') {
+            if (event.altKey && event.key === 'i') {
                 event.preventDefault();
                 event.stopPropagation();
 

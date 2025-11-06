@@ -111,7 +111,7 @@ class OrderForm
                                 ->columnSpan(1)
                                 ->afterStateUpdated(function ($state, Get $get, Set $set) {
                                     $price = (float) ($get('price') ?? 0);
-                                    $qty   = (float) ($state ?? 0);
+                                    $qty   = (float) ($state ?? 1);
                                     $set('total', $price * $qty);
                                     static::updateGrandTotal($get, $set);
                                 })
@@ -143,6 +143,7 @@ class OrderForm
                         ->numeric()
                         ->visible(fn(Get $get) => $get('order_type') === 'delivery')
                         ->live()
+                        ->debounce(500)
                         ->disabled(fn(Get $get) => $get('id') !== null)
                         ->afterStateUpdated(fn($state, Get $get, Set $set) => static::updateGrandTotal($get, $set)),
 
@@ -209,10 +210,10 @@ class OrderForm
                             });
 
                             $serviceCharge = $get('order_type') === 'dine_in'
-                                ? round($itemsTotal * 0.07, 2)
+                                ? round($itemsTotal * 0.07)
                                 : 0;
 
-                            return number_format($serviceCharge, 2);
+                            return 'Rs: ' . number_format($serviceCharge);
                         })
                         ->reactive(),
 
@@ -244,7 +245,7 @@ class OrderForm
                                 $grandTotal += $delivery;
                             }
 
-                            return number_format(round($grandTotal, 2), 2);
+                            return 'Rs: ' . number_format(round($grandTotal));
                         })
                         ->reactive(),
                 ])
@@ -275,7 +276,7 @@ class OrderForm
 
         // --- Step 3: Service charge (7% only for dine-in) ---
         $serviceCharge = $orderType === 'dine_in'
-            ? round($itemsTotal * 0.07, 2)
+            ? round($itemsTotal * 0.07)
             : 0;
 
         // Update service charge in UI
@@ -297,7 +298,7 @@ class OrderForm
         }
 
         // --- Step 6: Final formatting ---
-        $set('grand_total', round($grandTotal, 2));
+        $set('grand_total', round($grandTotal));
     }
 
 

@@ -40,7 +40,7 @@
         }
 
         th {
-            background: #4a90e2;
+            background: #f0a202;
             color: white;
             padding: 10px 8px;
             text-align: left;
@@ -60,7 +60,7 @@
         tfoot td {
             font-weight: bold;
             background: #f0f6ff;
-            border-top: 2px solid #4a90e2;
+            border-top: 2px solid #f0a202;
         }
 
         .no-data {
@@ -99,7 +99,7 @@
             <th>Category</th>
             <th>Product</th>
             <th>Total Quantity</th>
-            <th>Total Sales (₹)</th>
+            <th>Total Sales (Rs)</th>
         </tr>
         </thead>
         <tbody>
@@ -115,9 +115,9 @@
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="3" style="text-align:right;">Grand Total:</td>
+            <td colspan="3" style="text-align:right;"></td>
             <td>{{ $data->sum('total_quantity') }}</td>
-            <td>{{ number_format($data->sum('total_sales'), 2) }}</td>
+            <td>Grand Total: Rs {{ number_format($data->sum('total_sales')) }}</td>
         </tr>
         </tfoot>
     </table>

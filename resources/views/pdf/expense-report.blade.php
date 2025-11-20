@@ -39,7 +39,7 @@
         }
 
         th {
-            background: #4a90e2;
+            background: #f0a202;
             color: white;
             padding: 10px 8px;
             text-align: left;
@@ -59,7 +59,7 @@
         tfoot td {
             font-weight: bold;
             background: #f0f6ff;
-            border-top: 2px solid #4a90e2;
+            border-top: 2px solid #f0a202;
         }
 
         .no-data {
@@ -84,20 +84,20 @@
         <tr>
             <th>#</th>
             <th>Description</th>
-            <th>Category</th>
-            <th>Amount (₹)</th>
+            <th>Product</th>
+            <th>Amount (Rs)</th>
             <th>Day</th>
         </tr>
         </thead>
         <tbody>
         @php $grandTotal = 0; @endphp
         @foreach ($expenses as $key => $expense)
-            @php $grandTotal += $expense->amount; @endphp
+            @php $grandTotal += $expense->debit; @endphp
             <tr>
                 <td>{{ $key + 1 }}</td>
-                <td>{{ $expense->description ?? 'N/A' }}</td>
-                <td>{{ $expense->category ?? 'General' }}</td>
-                <td>{{ number_format($expense->amount, 2) }}</td>
+                <td>{{ $expense->account_description ?? 'N/A' }}</td>
+                <td>{{ $expense->product ?? '' }}</td>
+                <td>{{ number_format($expense->debit, 2) }}</td>
                 <td>{{ $expense->created_at->format('l') }}</td>
             </tr>
         @endforeach
@@ -105,7 +105,7 @@
         <tfoot>
         <tr>
             <td colspan="3" style="text-align:right;">Total:</td>
-            <td colspan="2">{{ number_format($grandTotal, 2) }}</td>
+            <td colspan="2">Rs {{ number_format($grandTotal, 2) }}</td>
         </tr>
         </tfoot>
     </table>

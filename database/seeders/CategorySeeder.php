@@ -14,11 +14,22 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         DB::table('categories')->insert([
-            ['name' => 'Kitchen'],
-            ['name' => 'Appetisers'],
-            ['name' => 'Sweets'],
-            ['name' => 'Beverages'],
-            ['name' => 'Desserts'],
+            ['name' => 'Appetizer', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Soup', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Salad', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Continental', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Chinese & Thai', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Beef', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Sea Food', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Pasta', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Sandwich', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Burger', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Pizzas', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Dessert', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Soft Drinks', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Smoothie', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Groovy SHake', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Mocktail', 'created_at'=> now(), 'updated_at' => now()],
         ]);
     }
 }

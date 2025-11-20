@@ -36,7 +36,7 @@
         }
 
         .type-title {
-            background: #4a90e2;
+            background: #f0a202;
             color: #fff;
             padding: 10px 14px;
             border-radius: 4px;
@@ -76,7 +76,7 @@
         tfoot td {
             font-weight: bold;
             background: #f0f6ff;
-            border-top: 2px solid #4a90e2;
+            border-top: 2px solid #f0a202;
         }
 
         .no-data {
@@ -151,14 +151,14 @@
                 <tfoot>
                 <tr>
                     <td colspan="4" style="text-align:right;">Subtotal ({{ $typeLabels[$type] ?? ucfirst($type) }}):</td>
-                    <td colspan="4">{{ number_format($subtotal, 2) }}</td>
+                    <td colspan="4">Rs {{ number_format($subtotal, 2) }}</td>
                 </tr>
                 </tfoot>
             </table>
         </div>
     @endforeach
 
-    <hr style="margin: 40px 0; border: none; border-top: 2px solid #4a90e2;">
+    <hr style="margin: 40px 0; border: none; border-top: 2px solid #f0a202;">
 
     <h3 style="text-align:right;">Grand Total: Rs{{ number_format($orders->sum('grand_total'), 2) }}</h3>
 @else

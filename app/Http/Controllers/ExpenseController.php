@@ -11,16 +11,12 @@ class ExpenseController extends Controller
     public function downloadSalesOrderPdf(Request $request)
     {
         $search = $request->get('search', '');
-
-        // Define 10 AM to next day 4 AM window
         $now = now();
         $startOfDay = $now->copy()->setTime(10, 0, 0);
         if ($now->lt($startOfDay)) {
             $startOfDay->subDay();
         }
         $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0);
-
-        // Query expenses for the day
         $expenses = Expense::query()
             ->when($search, fn($q) => $q->where('description', 'like', "%{$search}%"))
             ->whereBetween('created_at', [$startOfDay, $endOfDay])

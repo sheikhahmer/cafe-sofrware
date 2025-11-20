@@ -8,7 +8,7 @@
         h2 { text-align: center; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f3f3f3; }
+        th { background-color: #f0a202; }
         tfoot td {
             font-weight: bold;
             background-color: #f9f9f9;
@@ -46,7 +46,7 @@
     <tfoot>
     <tr>
         <td colspan="4" style="text-align: right;">Grand Total:</td>
-        <td>{{ number_format($grandTotal, 2) }}</td>
+        <td>Rs {{ number_format($grandTotal, 2) }}</td>
     </tr>
     </tfoot>
 </table>

@@ -35,6 +35,15 @@ class ExpensesTable
             ->filters([
                 //
             ])
+            ->modifyQueryUsing(function ($query) {
+                $now = now();
+                $startOfDay = $now->copy()->setTime(10, 0, 0);
+                if ($now->lt($startOfDay)) {
+                    $startOfDay->subDay();
+                }
+                $endOfDay = $startOfDay->copy()->addDay()->setTime(4, 0, 0);
+                $query->whereBetween('created_at', [$startOfDay, $endOfDay]);
+            })
             ->headerActions([
                 Action::make('download_pdf')
                     ->visible(fn () => auth()->user()->hasRole('Admin'))

@@ -49,11 +49,21 @@
         th, td {
             white-space: nowrap;
         }
+
+        /* Apply vertical dotted lines ONLY to the items table */
+        .items-table td:not(:last-child),
+        .items-table th:not(:last-child) {
+            border-right: 1px dashed #000;
+        }
+
     </style>
 </head>
 <body onload="window.print()">
 <div style="text-align: center; margin-bottom: 10px;">
-    <img src="{{ asset('assets/images/logo.png') }}" alt="Masoom's Cafe Logo" style="max-width: 130px;">
+{{--    <img src="{{ asset('assets/images/logo.png') }}" alt="Masoom's Cafe Logo" style="max-width: 130px;">--}}
+    <p style="text-align: center; font-family: 'Brush Script MT'; font-size: 45px; display: list-item; margin-bottom: 10px;">
+        Masoom’s
+    </p>
 </div>
 <p><strong>Order #:</strong> {{ $order->id }}</p>
 <p><strong>Date:</strong> {{ $order->created_at }}</p>
@@ -75,7 +85,7 @@
 </p>
 
 
-<table>
+<table class="items-table">
     <thead>
     <tr>
         <th>Item</th>

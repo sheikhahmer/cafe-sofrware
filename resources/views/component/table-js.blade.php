@@ -51,6 +51,22 @@
                     console.warn('New Order button not found.');
                 }
             }
+            document.addEventListener('keydown', function(event) {
+                if (event.altKey && event.key.toLowerCase() === 'n') {   // ALT + n for Expense
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const expenseButton = document.querySelector('.fi-ac-btn-action.fi-btn.fi-size-md:not([disabled])');
+
+                    if (expenseButton) {
+                        expenseButton.click();
+                    } else {
+                        console.warn('Expense New button not found.');
+                    }
+                }
+            });
+
+
         }
 
         // Helper function to find enabled action buttons

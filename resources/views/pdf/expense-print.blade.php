@@ -14,9 +14,16 @@
     </style>
 </head>
 <body>
+<p style="    text-align: center;
+    font-family: 'Brush Script MT';
+    font-size: 40px;
+    display: list-item;
+    margin-bottom: 10px;">
+    Masoom’s
+</p>
 <h2>Daily Expense Report</h2>
 <p style="text-align:center;">
-    Generated on: {{ now()->format('F j, Y g:i A') }}
+{{--    Generated on: {{ now()->format('F j, Y g:i A') }}--}}
 </p>
 
 @if($expenses->count() > 0)
@@ -24,29 +31,27 @@
         <thead>
         <tr>
             <th>#</th>
-            <th>Description</th>
+{{--            <th>Description</th>--}}
             <th>Product</th>
             <th>Amount (Rs)</th>
-            <th>Day</th>
         </tr>
         </thead>
         <tbody>
         @php $total = 0; @endphp
         @foreach($expenses as $i => $expense)
-            @php $total += $expense->amount; @endphp
+            @php $total += $expense->debit; @endphp
             <tr>
                 <td>{{ $i + 1 }}</td>
-                <td>{{ $expense->account_description ?? 'N/A' }}</td>
+{{--                <td>{{ $expense->account_description ?? 'N/A' }}</td>--}}
                 <td>{{ $expense->product ?? '' }}</td>
-                <td>{{ number_format($expense->debit, 2) }}</td>
-                <td>{{ $expense->created_at->format('l') }}</td>
+                <td>{{ number_format($expense->debit) }}</td>
             </tr>
         @endforeach
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="3" style="text-align:right;">Total:</td>
-            <td colspan="2">Rs {{ number_format($total, 2) }}</td>
+            <td colspan="2" style="text-align:right;">Total:</td>
+            <td colspan="2">Rs {{ number_format($total) }}</td>
         </tr>
         </tfoot>
     </table>

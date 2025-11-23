@@ -72,6 +72,7 @@
 </head>
 <body>
 <div class="report-header">
+    <img src="{{ public_path('assets/images/logo.png') }}" alt="Logo" style="width:130px; margin-bottom: 10px;">
     <h1>Daily Expense Report</h1>
     <p>
         Generated on: {{ now()->format('F j, Y g:i A') }}
@@ -97,7 +98,7 @@
                 <td>{{ $key + 1 }}</td>
                 <td>{{ $expense->account_description ?? 'N/A' }}</td>
                 <td>{{ $expense->product ?? '' }}</td>
-                <td>{{ number_format($expense->debit, 2) }}</td>
+                <td>{{ number_format($expense->debit) }}</td>
                 <td>{{ $expense->created_at->format('l') }}</td>
             </tr>
         @endforeach
@@ -105,7 +106,7 @@
         <tfoot>
         <tr>
             <td colspan="3" style="text-align:right;">Total:</td>
-            <td colspan="2">Rs {{ number_format($grandTotal, 2) }}</td>
+            <td colspan="2">Rs {{ number_format($grandTotal) }}</td>
         </tr>
         </tfoot>
     </table>

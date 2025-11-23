@@ -20,6 +20,7 @@
     </style>
 </head>
 <body>
+<img src="{{ public_path('assets/images/logo.png') }}" alt="Logo" style="width:130px; margin-bottom: 10px;">
 <h2>Sales Orders Report ({{ now()->toFormattedDateString() }})</h2>
 <p style="text-align:center; margin-bottom: 10px;">
     From: <strong>{{ $startOfDay->format('d M Y h:i A') }}</strong> —

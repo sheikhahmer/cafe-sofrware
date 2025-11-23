@@ -2,6 +2,13 @@
 <html>
 <head>
     <meta charset="UTF-8">
+{{--    <p style="    text-align: center;--}}
+{{--    font-family: 'Brush Script MT';--}}
+{{--    font-size: 40px;--}}
+{{--    display: list-item;--}}
+{{--    margin-bottom: 10px;">--}}
+{{--        Masoom’s--}}
+{{--    </p>--}}
     <title>Item Sales Report</title>
     <style>
         body { font-family: sans-serif; font-size: 14px; padding: 30px; }
@@ -19,12 +26,12 @@
     </style>
 </head>
 <body>
-<h2>Item Sales Report ({{ now()->toFormattedDateString() }})</h2>
+{{--<h2>Item Sales Report ({{ now()->toFormattedDateString() }})</h2>--}}
 <table>
     <thead>
     <tr>
         <th>Order ID</th>
-        <th>Category</th>
+{{--        <th>Category</th>--}}
         <th>Product</th>
         <th>Total Quantity Sold</th>
         <th>Total Sales</th>
@@ -36,17 +43,17 @@
         @php $grandTotal += $item->total_sales; @endphp
         <tr>
             <td>{{ $item->order_id ?? '-' }}</td>
-            <td>{{ $item->category->name ?? '-' }}</td>
+{{--            <td>{{ $item->category->name ?? '-' }}</td>--}}
             <td>{{ $item->product->name ?? '-' }}</td>
             <td>{{ $item->total_quantity }}</td>
-            <td>{{ number_format($item->total_sales, 2) }}</td>
+            <td>{{ number_format($item->total_sales) }}</td>
         </tr>
     @endforeach
     </tbody>
     <tfoot>
     <tr>
-        <td colspan="4" style="text-align: right;">Grand Total:</td>
-        <td>Rs {{ number_format($grandTotal, 2) }}</td>
+        <td colspan="2">Grand Total:</td>
+        <td colspan="2" style="text-align: right;">Rs {{ number_format($grandTotal) }}</td>
     </tr>
     </tfoot>
 </table>

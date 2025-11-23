@@ -87,6 +87,7 @@
 </head>
 <body>
 <div class="report-header">
+    <img src="{{ public_path('assets/images/logo.png') }}" alt="Logo" style="width:130px; margin-bottom: 10px;">
     <h1>Item Sales Report</h1>
     <p>Generated on: {{ now()->format('F j, Y g:i A') }}</p>
 </div>

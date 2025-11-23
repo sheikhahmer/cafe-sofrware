@@ -106,6 +106,7 @@
 </head>
 <body>
 <div class="report-header">
+    <img src="{{ public_path('assets/images/logo.png') }}" alt="Logo" style="width:130px; margin-bottom: 10px;">
     <h1>Sales Orders Report</h1>
     <p>
         Generated on: {{ now()->format('F j, Y g:i A') }}
@@ -143,7 +144,7 @@
                         <td>{{ $order->id }}</td>
                         <td>{{ $order->customer_name ?? 'N/A' }}</td>
                         <td>{{ ucfirst($order->status) }}</td>
-                        <td>{{ number_format($order->grand_total, 2) }}</td>
+                        <td>{{ number_format($order->grand_total) }}</td>
                         <td>{{ $order->created_at->format('d M Y h:i A') }}</td>
                     </tr>
                 @endforeach
@@ -151,7 +152,7 @@
                 <tfoot>
                 <tr>
                     <td colspan="4" style="text-align:right;">Subtotal ({{ $typeLabels[$type] ?? ucfirst($type) }}):</td>
-                    <td colspan="4">Rs {{ number_format($subtotal, 2) }}</td>
+                    <td colspan="4">Rs {{ number_format($subtotal) }}</td>
                 </tr>
                 </tfoot>
             </table>
@@ -160,7 +161,7 @@
 
     <hr style="margin: 40px 0; border: none; border-top: 2px solid #f0a202;">
 
-    <h3 style="text-align:right;">Grand Total: Rs{{ number_format($orders->sum('grand_total'), 2) }}</h3>
+    <h3 style="text-align:right;">Grand Total: Rs{{ number_format($orders->sum('grand_total')) }}</h3>
 @else
     <p class="no-data">No sales found for this period.</p>
 @endif

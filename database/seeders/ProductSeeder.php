@@ -773,6 +773,28 @@ class ProductSeeder extends Seeder
                     "price"       => 499
                 ],
 
+            [
+                "category_id" => 15,
+                "name"        => "Groovy Shake",
+                'description' => null,
+                "price"       => 499
+            ],
+
+            [
+                "category_id" => 16,
+                "name"        => "Mocktail",
+                'description' => null,
+                "price"       => 499
+            ],
+            [
+                "category_id" => 17,
+                "name"        => "Cakes",
+                'description' => null,
+                "price"       => 499
+            ],
+
+
+
         ]);
 
     }

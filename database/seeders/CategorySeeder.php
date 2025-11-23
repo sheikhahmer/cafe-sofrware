@@ -28,8 +28,9 @@ class CategorySeeder extends Seeder
             ['name' => 'Dessert', 'created_at'=> now(), 'updated_at' => now()],
             ['name' => 'Soft Drinks', 'created_at'=> now(), 'updated_at' => now()],
             ['name' => 'Smoothie', 'created_at'=> now(), 'updated_at' => now()],
-            ['name' => 'Groovy SHake', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Groovy Shake', 'created_at'=> now(), 'updated_at' => now()],
             ['name' => 'Mocktail', 'created_at'=> now(), 'updated_at' => now()],
+            ['name' => 'Cakes', 'created_at'=> now(), 'updated_at' => now()],
         ]);
     }
 }

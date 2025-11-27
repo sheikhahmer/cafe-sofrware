@@ -13,32 +13,49 @@ class MonthlyOrdersChart extends ChartWidget
 
     protected function getData(): array
     {
-        $now = now();
-
-        // We'll shift times by -10 hours to align the 10 AM–4 AM window to midnight
+        // Get orders from the last 12 months
+        $startDate = now()->subMonths(11)->startOfMonth();
+        
         $orders = Order::select(
-            DB::raw("MONTH(DATE_SUB(created_at, INTERVAL 10 HOUR)) as month"),
+            DB::raw("YEAR(created_at) as year"),
+            DB::raw("MONTH(created_at) as month"),
             DB::raw('SUM(grand_total) as total_sales')
         )
-            ->whereYear('created_at', $now->year)
-            ->groupBy('month')
-            ->pluck('total_sales', 'month')
-            ->toArray();
+            ->where('created_at', '>=', $startDate)
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'asc')
+            ->orderBy('month', 'asc')
+            ->get();
 
+        // Create array with last 12 months
         $labels = [];
         $sales = [];
+        $dataMap = [];
 
-        for ($m = 1; $m <= 12; $m++) {
-            $labels[] = date("F", mktime(0, 0, 0, $m, 1));
-            $sales[]  = isset($orders[$m]) ? (float) $orders[$m] : 0;
+        // Map the data
+        foreach ($orders as $order) {
+            $key = $order->year . '-' . str_pad($order->month, 2, '0', STR_PAD_LEFT);
+            $dataMap[$key] = (float) $order->total_sales;
+        }
+
+        // Generate last 12 months
+        for ($i = 11; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $key = $date->format('Y-m');
+            $monthName = $date->format('M Y');
+            
+            $labels[] = $monthName;
+            $sales[] = isset($dataMap[$key]) ? $dataMap[$key] : 0;
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Total Sales',
+                    'label' => 'Total Sales (Rs)',
                     'data' => $sales,
-                    'backgroundColor' => '#3b82f6',
+                    'backgroundColor' => '#F0A202',
+                    'borderColor' => '#F0A202',
+                    'borderWidth' => 2,
                 ],
             ],
             'labels' => $labels,

@@ -22,8 +22,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         FilamentView::registerRenderHook(
+            'panels::body.start',
+            fn (): string => view('component.preloader')->render(),
+        );
+
+        FilamentView::registerRenderHook(
             'panels::body.end',
-            fn (): string => view('component.table-js')->render(),
+            fn (): string => view('component.table-js')->render() . view('component.preloader-js')->render(),
         );
     }
 

@@ -37,7 +37,7 @@ class StatsOverView extends StatsOverviewWidget
                 ->color('success'),
 
             Stat::make('Total Waiters', Waiter::count())
-                ->description('Total Vendors')
+                ->description('Total Waiters')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
 

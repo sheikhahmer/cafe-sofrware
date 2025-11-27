@@ -26,6 +26,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'item sales',
             'order sales',
             'designations',
+            'salaries',
+            'attendances',
             'roles'
         ];
 

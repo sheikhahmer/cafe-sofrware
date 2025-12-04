@@ -52,6 +52,31 @@ class SalaryResource extends Resource
             'edit' => EditSalary::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view salaries');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create salaries');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('edit salaries');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete salaries');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view salaries');
+    }
 }
 
 

@@ -33,9 +33,14 @@ class RoleSeeder extends Seeder
 
         // Give user limited permissions (only view & create orders)
         $userPermissions = Permission::whereIn('name', [
-            'view order',
-            'create order',
-            'view product',
+            'view orders',
+            'create orders',
+            'create order items',
+            'view order items',
+            'edit order items',
+            'delete order items',
+            'view expenses',
+            'create expenses',
         ])->get();
 
         $userRole->syncPermissions($userPermissions);

@@ -48,8 +48,13 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 🔹 Assign permissions for creating orders and expenses to User
         $userPermissions = Permission::whereIn('name', [
+            'view orders',
             'create orders',
             'create order items',
+            'view order items',
+            'edit order items',
+            'delete order items',
+            'view expenses',
             'create expenses',
         ])->get();
 

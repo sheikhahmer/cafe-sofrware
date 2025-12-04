@@ -35,6 +35,7 @@ class ExpensesTable
             ->filters([
                 //
             ])
+            ->recordUrl(null)
             ->modifyQueryUsing(function ($query) {
                 $now = now();
                 $startOfDay = $now->copy()->setTime(10, 0, 0);
